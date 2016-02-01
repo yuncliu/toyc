@@ -26,7 +26,7 @@ LIB=-L.
 
 all:clean $(YACC_CC) $(LEX_CC) $(EXE)
 
-test: $(TEST)
+test: $(YACC_CC) $(LEX_CC) $(TEST)
 
 gtest:
 	git submodule update

@@ -5,15 +5,17 @@ CC=${CC}
 CFLAGS=-Wall -g  -DDEBUG
 LINKS	=  -lstdc++ -lgtest -lpthread
 
-
-CCOBJS	= lex_unittest.o \
-			  main_test.o
+CCOBJS	=../lex.o \
+		../parser.o \
+		lex_unittest.o \
+		main_test.o
 
 TEST=../t.out
 
 VPATH		 = ./
 
 INC=-I.\
+	-I.. \
 	-I../googletest/googletest/include
 
 LIB=-L. \
