@@ -1,5 +1,6 @@
 *.o
-patch.h
-patch.cc
+*.out
+parser.h
+parser.cc
 lex.h
 lex.cc
