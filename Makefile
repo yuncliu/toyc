@@ -28,6 +28,12 @@ all:clean $(YACC_CC) $(LEX_CC) $(EXE)
 
 test: $(TEST)
 
+gtest:
+	git submodule update
+	mkdir googletest/build
+	cd googletest/build;cmake ..;make
+
+
 $(TEST):
 	cd unittest;make
 
