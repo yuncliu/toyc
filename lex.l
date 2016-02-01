@@ -9,11 +9,9 @@
 
 [0-9]+ {
     yylval = atoi(yytext);
-    printf("NUM\n");
     return NUM;
 }
 [-+*/^()] {
-    printf("OP\n");
     return *yytext;
 }
 

@@ -26,16 +26,14 @@ LIB=-L.
 
 all:clean $(YACC_CC) $(LEX_CC) $(EXE)
 
-test: $(YACC_CC) $(LEX_CC) $(TEST)
+test: clean $(YACC_CC) $(LEX_CC)
+	cd unittest;make
 
 gtest:
 	git submodule update
 	mkdir googletest/build
 	cd googletest/build;cmake ..;make
 
-
-$(TEST):
-	cd unittest;make
 
 
 $(EXE):$(EXEOBJS)
