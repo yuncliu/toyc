@@ -1,5 +1,6 @@
 *.o
 *.out
+*.swp
 parser.h
 parser.cc
 lex.h

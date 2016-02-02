@@ -1,3 +1,4 @@
+#if 0
 typedef enum {
     typeCon,
     typeId,
@@ -28,3 +29,15 @@ typedef struct _stnodeType {
         oprNodeType opr;        /* operators */
     };
 } nodeType;
+class Node {
+    public:
+        Node();
+        ~Node();
+        enum nodeType {
+            CONSTANT;
+            IDENTIFIER;
+            OPERATION;
+        }
+        nodeType type;
+};
+#endif
