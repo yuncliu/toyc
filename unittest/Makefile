@@ -3,7 +3,7 @@ LEX=flex
 YACC=bison
 CC=${CC}
 CFLAGS=-Wall -g  -DDEBUG
-LINKS	=  -lstdc++ -lgtest -lpthread
+LINKS	=  -lstdc++ -lgtest -lpthread -lm
 
 CCOBJS	=../lex.o \
 		../parser.o \
