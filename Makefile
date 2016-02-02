@@ -7,8 +7,8 @@ LINKS	=  -lstdc++ -lm
 
 
 EXEOBJS	= lex.o \
-			  parser.o \
-			  main.o
+			parser.o \
+			main.o
 
 LEX_CC		= lex.cc
 YACC_CC		= parser.cc
@@ -30,6 +30,7 @@ test: clean $(YACC_CC) $(LEX_CC)
 	cd unittest;make
 
 gtest:
+	git submodule init
 	git submodule update
 	mkdir googletest/build
 	cd googletest/build;cmake ..;make

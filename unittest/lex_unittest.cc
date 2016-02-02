@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "node.h"
 #include "lex.h"
 #include "parser.h"
 

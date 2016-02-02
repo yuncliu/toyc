@@ -1,6 +1,8 @@
 %{
-#include "parser.h"
 #include <stdlib.h>
+
+#include "node.h"
+#include "parser.h"
 %}
 
 %option nounput
@@ -8,7 +10,7 @@
 %%
 
 [0-9]+ {
-    yylval = atoi(yytext);
+    yylval.value = atof(yytext);
     return NUM;
 }
 [-+*/^()] {

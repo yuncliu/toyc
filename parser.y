@@ -1,17 +1,23 @@
 %{
 #include <stdio.h>
 #include <math.h>
+#include "node.h"
 int yylex (void);
 void yyerror (char const *);
 %}
 
-%define api.value.type {int}
-%token NUM
+%union {
+    double value;              /* integer value */
+    char index;                /* symbol table index */
+    nodeType *nPtr;            /* node pointer */
+}
+
+%token <value> NUM
+%token <index> VAR
 %left '-' '+'
 %left '*' '/'
 %right '^'
-%precedence NEG
-
+%type <value> exp
 %%
 input:
     |input line
@@ -19,7 +25,7 @@ input:
 
 line:
     '\n'
-    | exp '\n' { printf ("result = %d\n", $1); }
+    | exp '\n' { printf ("result = %f\n", $1); }
 ;
 exp:
     NUM { $$ = $1; }
