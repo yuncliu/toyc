@@ -1,43 +1,27 @@
-#if 0
-typedef enum {
-    typeCon,
-    typeId,
-    typeOpr
-} nodeEnum;
-/* constants */
-typedef struct {
-    int value;                  /* value of constant */
-} conNodeType;
+#include <stdio.h>
+#include <vector>
+#include <map>
+#include <string>
+using namespace std;
 
-/* identifiers */
-typedef struct {
-    int i;                      /* subscript to sym array */
-} idNodeType;
 
-/* operators */
-typedef struct {
-    int oper;                   /* operator */
-    int nops;                   /* number of operands */
-    struct _stnodeType **op;    /* operands */
-} oprNodeType;
-
-typedef struct _stnodeType {
-    nodeEnum type;              /* type of node */
-    union {
-        conNodeType con;        /* constants */
-        idNodeType  id;          /* identifiers */
-        oprNodeType opr;        /* operators */
-    };
-} nodeType;
 class Node {
     public:
         Node();
-        ~Node();
+        virtual ~Node();
         enum nodeType {
-            CONSTANT;
-            IDENTIFIER;
-            OPERATION;
-        }
+            CONSTANT,
+            IDENTIFIER,
+            OPERATION,
+        };
+        enum opType {
+            opADD,
+            opIF,
+        };
+        double ex();
+        double ex(opType, vector<Node>& nodes);
+        double exop(opType, vector<Node>& nodes);
         nodeType type;
+        double value;
+        static map<string, double> symbol_table;
 };
-#endif

@@ -8,7 +8,6 @@
 using namespace std;
 int yylex (void);
 void yyerror (char const *);
-map<string, double> symbol_table;
 extern char* yytext;
 %}
 
@@ -41,15 +40,15 @@ exp:
     NUM { $$ = $1; }
     |VAR {
         map<string, double>::iterator it;
-        for (it = symbol_table.begin(); it != symbol_table.end(); ++it) {
+        for (it = Node::symbol_table.begin(); it != Node::symbol_table.end(); ++it) {
             printf("%s -> %f\n", it->first.c_str(), it->second);
         }
-        it = symbol_table.find(yyval.var);
-        if (it != symbol_table.end()) {
+        it = Node::symbol_table.find(yyval.var);
+        if (it != Node::symbol_table.end()) {
             $$ = it->second;
         }
     }
-    |VAR '=' exp { symbol_table[yyval.var] = $3; $$ = $3;}
+    |VAR '=' exp { Node::symbol_table[yyval.var] = $3; $$ = $3;}
     |exp '+' exp { $$ = $1 + $3; }
     |exp '-' exp { $$ = $1 - $3; }
     |exp '*' exp { $$ = $1 * $3; }

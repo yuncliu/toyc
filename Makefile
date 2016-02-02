@@ -8,6 +8,7 @@ LINKS	=  -lstdc++ -lm
 
 EXEOBJS	= lex.o \
 			parser.o \
+			node.o \
 			main.o
 
 LEX_CC		= lex.cc
