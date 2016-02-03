@@ -7,11 +7,12 @@ using namespace std;
 
 class Node {
     public:
-        Node();
+        Node(double value);
+        Node(string name, double value);
         virtual ~Node();
         enum nodeType {
             CONSTANT,
-            IDENTIFIER,
+            VARIABLES,
             OPERATION,
         };
         enum opType {
@@ -21,7 +22,8 @@ class Node {
         double ex();
         double ex(opType, vector<Node>& nodes);
         double exop(opType, vector<Node>& nodes);
+        Node operator+ (const Node& n);
         nodeType type;
-        double value;
-        static map<string, double> symbol_table;
+        string   name;
+        double   value;
 };

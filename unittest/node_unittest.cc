@@ -4,16 +4,16 @@
 #include "parser.h"
 
 TEST(node, add) {
-    Node a;
-    Node b;
-    Node c;
-    a.value = 1;
-    b.value = 1;
-    vector<Node> params;
-    params.push_back(a);
-    params.push_back(b);
-    c.value = 0;
-    c.type = Node::OPERATION;
-    c.ex(Node::opADD, params);
+    Node a(1);
+    Node b(1);
+    Node c(0);
+    c = a + b;
+    EXPECT_EQ(c.value, 2);
+}
+
+TEST(node, add1) {
+    Node a(1);
+    Node b(1);
+    Node c = a + b;
     EXPECT_EQ(c.value, 2);
 }

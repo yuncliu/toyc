@@ -18,8 +18,8 @@ return PRINT;
 }
 
 [a-z]+ {
-    memset(yylval.var, 0x00, sizeof(yylval.var));
-    strcpy(yylval.var, yytext);
+    memset(yylval.str, 0x00, sizeof(yylval.str));
+    strcpy(yylval.str, yytext);
     return VAR;
 }
 
