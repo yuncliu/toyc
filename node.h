@@ -7,23 +7,29 @@ using namespace std;
 
 class Node {
     public:
-        Node(double value);
-        Node(string name, double value);
-        virtual ~Node();
         enum nodeType {
-            CONSTANT,
+            CONSTANT = 10,
             VARIABLES,
             OPERATION,
         };
         enum opType {
-            opADD,
+            opADD =1,
             opIF,
+            opASSIGN,
+            opSEMICOLON,
+            NoneOP,
         };
+        Node(double value);
+        Node(string name, double value);
+        Node(opType op);
+        virtual ~Node();
         double ex();
-        double ex(opType, vector<Node>& nodes);
-        double exop(opType, vector<Node>& nodes);
+        double exop();
+        int addchild(Node* n);
         Node operator+ (const Node& n);
         nodeType type;
+        opType   operation;
         string   name;
         double   value;
+        vector<Node*> nodes;
 };

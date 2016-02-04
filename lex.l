@@ -32,10 +32,6 @@ return PRINT;
     return *yytext;
 }
 
-[\n] {
-    return *yytext;
-}
-
 [;] {
     return *yytext;
 }

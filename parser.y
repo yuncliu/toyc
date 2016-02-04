@@ -10,6 +10,7 @@ int yylex (void);
 void yyerror (char const *);
 extern char* yytext;
 map<string, Node*> symbol_table;
+void print_symbol_table();
 %}
 
 %union {
@@ -26,63 +27,75 @@ map<string, Node*> symbol_table;
 %right '^'
 %type <node> exp
 %type <node> line
+%type <node> lines
+
 %%
 
 input:
      %empty
-    |input line
+    |input line {
+        printf("input line\n");
+        $2->ex();
+        printf("ex result = %f\n", $2->value);
+        print_symbol_table();
+    }
 ;
 
 line:
-    '\n' {}
-    |';' {printf("nothing\n");}
+    ';' {
+        printf("nothing\n");
+        $$= new Node(Node::opSEMICOLON);
+    }
     |exp ';' {
-        printf ("result = %f\n", $1->value);
-        delete $1;
+        printf("exp;\n");
+        $$ = $1;
     }
-    |PRINT '(' exp ')' ';' {
-        printf("%f\n", $3->value);
-        if ($3->type != Node::VARIABLES) {
-            delete $3;
-        }
+    |IF '(' exp ')' exp {
+        $$ = new Node(Node::opIF);
+        $$->addchild($3);
+        $$->addchild($5);
     }
-    |VAR '=' exp ';' {
-        /*$1->value = $3->value;*/
-        $$ = new Node($1, $3->value);
-        delete $3;
-    }
-    |IF '(' exp ')' line{
-        printf("fuck if\n");
-        if ($3->value) {
-            printf("fuck if true\n");
-            $$ = $5;
-        }
-    }
-    |'{' line '}' {
+    |'{' lines '}' {
         $$ = $2;
+    }
+;
+
+lines:
+     line        {$$=$1;}
+    |lines line {
+        printf("new ; node\n");
+        $$ = new Node(Node::opSEMICOLON);
+        $$->addchild($1);
+        $$->addchild($2);
     }
 ;
 
 exp:
     NUM {
+        printf("new num node[%f]\n", $1);
         $$ = new Node($1);
     }
     |VAR {
         map<string, Node*>::iterator it = symbol_table.find($1);
         if ( it != symbol_table.end()) {
             $$ = it->second;
+            printf("use var node[%s] [%f]\n", $1, $$->value);
         } else {
+            printf("new var node[%s]\n", $1);
             $$ = new Node($1, 0);
         }
     }
     |exp '+' exp {
-        $$ = new Node($1->value + $3->value);
-        if ($1->type != Node::VARIABLES) {
-            delete $1;
-        }
-        if ($3->type != Node::VARIABLES) {
-            delete $3;
-        }
+        printf("new add node [+][%p]\n", $$);
+        $$ = new Node(Node::opADD);
+        $$->addchild($1);
+        $$->addchild($3);
+    }
+    |exp '=' exp {
+        printf("new add node [=][%p]\n", $$);
+        $$ = new Node(Node::opASSIGN);
+        $$->addchild($1);
+        $$->addchild($3);
     }
     |'(' exp ')' {
         $$ = $2;
@@ -95,4 +108,12 @@ void
 yyerror (char const *s)
 {
     fprintf (stderr, "%s\n", s);
+}
+
+void print_symbol_table() {
+    map<string, Node*>::iterator it;
+    printf("symbol table:\n");
+    for (it = symbol_table.begin(); it != symbol_table.end(); ++it) {
+        printf("symbol [%s] value [%f]\n", it->first.c_str(), it->second->value);
+    }
 }

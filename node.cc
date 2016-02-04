@@ -1,9 +1,9 @@
 #include "node.h"
 extern map<string, Node*> symbol_table;
 
-Node::Node(double d){
+Node::Node(double value){
     this->type = CONSTANT;
-    this->value = d;
+    this->value = value;
 }
 
 Node::Node(string name, double value) {
@@ -11,6 +11,11 @@ Node::Node(string name, double value) {
     this->value = value;
     this->name  = name;
     symbol_table.insert(pair<string, Node*>(name, this));
+}
+
+Node::Node(opType op) {
+    this->operation = op;
+    this->type = OPERATION;
 }
 
 Node::~Node(){
@@ -22,34 +27,38 @@ double Node::ex() {
             return this->value;
             break;
         case VARIABLES:
-            break;
-        case OPERATION:
-            break;
-    }
-    return 0;
-}
-double Node::ex(Node::opType op, vector<Node>& nodes) {
-    switch(this->type) {
-        case CONSTANT:
             return this->value;
             break;
-        case VARIABLES:
-            break;
         case OPERATION:
-            this->exop(op, nodes);
+            return this->exop();
             break;
     }
     return 0;
 }
 
-double Node::exop(Node::opType op, vector<Node>& nodes) {
-    switch(op) {
+double Node::exop() {
+    switch(this->operation) {
         case opADD:
-            this->value = nodes[0].value + nodes[1].value;
+            printf("execute + [%f + %f]\n", nodes[0]->ex(), nodes[1]->ex());
+            return nodes[0]->ex() + nodes[1]->ex();
             break;
         case opIF:
-            if (nodes[0].value) {
-                nodes[1].ex();
+            if (nodes[0]->ex()) {
+                return nodes[1]->ex();
+            }
+            break;
+        case opASSIGN:
+            printf("execute =\n");
+            if (nodes[1]->type == OPERATION) {
+                nodes[0]->value = nodes[1]->ex();
+            }else {
+                nodes[0]->value = nodes[1]->value;
+            }
+            break;
+        case opSEMICOLON:
+            printf("execute ;\n");
+            for (size_t i = 0; i < this->nodes.size(); ++i) {
+                this->nodes[i]->ex();
             }
             break;
         default:
@@ -57,8 +66,14 @@ double Node::exop(Node::opType op, vector<Node>& nodes) {
     }
     return 0;
 }
+
 Node Node::operator+ (const Node& n) {
     Node t(0.0);
     t.value = this->value + n.value;
     return t;
+}
+
+int Node::addchild(Node* n) {
+    this->nodes.push_back(n);
+    return 0;
 }
