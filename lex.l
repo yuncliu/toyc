@@ -10,11 +10,15 @@
 %%
 
 "if" {
-return IF;
+    return IF;
+}
+
+"while" {
+    return WHILE;
 }
 
 "print" {
-return PRINT;
+    return PRINT;
 }
 
 [a-z]+ {

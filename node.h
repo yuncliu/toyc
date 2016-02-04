@@ -4,6 +4,7 @@
 #include <string>
 using namespace std;
 
+#define  LOG(fmt, args...)  if (1) printf(fmt, ##args)
 
 class Node {
     public:
@@ -14,7 +15,11 @@ class Node {
         };
         enum opType {
             opADD =1,
+            opMINUS,
+            opMUL,
+            opDIV,
             opIF,
+            opWHILE,
             opASSIGN,
             opSEMICOLON,
             NoneOP,

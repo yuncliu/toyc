@@ -37,26 +37,48 @@ double Node::ex() {
 }
 
 double Node::exop() {
+    double r = 0;
     switch(this->operation) {
         case opADD:
-            printf("execute + [%f + %f]\n", nodes[0]->ex(), nodes[1]->ex());
+            LOG("execute [%f + %f]\n", nodes[0]->ex(), nodes[1]->ex());
             return nodes[0]->ex() + nodes[1]->ex();
+            break;
+        case opMINUS:
+            LOG("execute [%f - %f]\n", nodes[0]->ex(), nodes[1]->ex());
+            return nodes[0]->ex() - nodes[1]->ex();
+            break;
+        case opMUL:
+            LOG("execute [%f * %f]\n", nodes[0]->ex(), nodes[1]->ex());
+            return nodes[0]->ex() * nodes[1]->ex();
+            break;
+        case opDIV:
+            LOG("execute [%f / %f]\n", nodes[0]->ex(), nodes[1]->ex());
+            return nodes[0]->ex() / nodes[1]->ex();
             break;
         case opIF:
             if (nodes[0]->ex()) {
                 return nodes[1]->ex();
             }
             break;
+        case opWHILE:
+            r = nodes[0]->ex();
+            LOG("while iterate result = [%f]\n", r);
+            while (r > 0) {
+                nodes[1]->ex();
+            }
+            break;
         case opASSIGN:
-            printf("execute =\n");
+            LOG("execute =\n");
             if (nodes[1]->type == OPERATION) {
                 nodes[0]->value = nodes[1]->ex();
+                return nodes[0]->ex();
             }else {
                 nodes[0]->value = nodes[1]->value;
+                return nodes[0]->ex();
             }
             break;
         case opSEMICOLON:
-            printf("execute ;\n");
+            LOG("execute ;\n");
             for (size_t i = 0; i < this->nodes.size(); ++i) {
                 this->nodes[i]->ex();
             }

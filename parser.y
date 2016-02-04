@@ -21,7 +21,7 @@ void print_symbol_table();
 
 %token <value> NUM
 %token <str> VAR
-%token IF PRINT
+%token IF WHILE PRINT
 %left '-' '+'
 %left '*' '/'
 %right '^'
@@ -34,26 +34,37 @@ void print_symbol_table();
 input:
      %empty
     |input line {
-        printf("input line\n");
+        LOG("input line\n");
         $2->ex();
-        printf("ex result = %f\n", $2->value);
+        LOG("ex result = %f\n", $2->value);
         print_symbol_table();
     }
 ;
 
 line:
     ';' {
-        printf("nothing\n");
+        LOG("nothing\n");
         $$= new Node(Node::opSEMICOLON);
     }
     |exp ';' {
-        printf("exp;\n");
+        LOG("exp;\n");
         $$ = $1;
     }
     |IF '(' exp ')' exp {
+        LOG("new [if] node\n");
         $$ = new Node(Node::opIF);
         $$->addchild($3);
         $$->addchild($5);
+    }
+    |WHILE '(' exp ')' exp {
+        LOG("new [while] node\n");
+        $$ = new Node(Node::opWHILE);
+        $$->addchild($3);
+        $$->addchild($5);
+    }
+    |PRINT '(' exp ')' {
+        printf(">>%f\n", $3->ex());
+        $$ = $3;
     }
     |'{' lines '}' {
         $$ = $2;
@@ -63,7 +74,7 @@ line:
 lines:
      line        {$$=$1;}
     |lines line {
-        printf("new ; node\n");
+        LOG("new ; node\n");
         $$ = new Node(Node::opSEMICOLON);
         $$->addchild($1);
         $$->addchild($2);
@@ -72,27 +83,45 @@ lines:
 
 exp:
     NUM {
-        printf("new num node[%f]\n", $1);
+        LOG("new num node[%f]\n", $1);
         $$ = new Node($1);
     }
     |VAR {
         map<string, Node*>::iterator it = symbol_table.find($1);
         if ( it != symbol_table.end()) {
             $$ = it->second;
-            printf("use var node[%s] [%f]\n", $1, $$->value);
+            LOG("use var node[%s] [%f]\n", $1, $$->value);
         } else {
-            printf("new var node[%s]\n", $1);
+            LOG("new var node[%s]\n", $1);
             $$ = new Node($1, 0);
         }
     }
     |exp '+' exp {
-        printf("new add node [+][%p]\n", $$);
+        LOG("new node [+][%p]\n", $$);
         $$ = new Node(Node::opADD);
         $$->addchild($1);
         $$->addchild($3);
     }
+    |exp '-' exp {
+        LOG("new node [-][%p]\n", $$);
+        $$ = new Node(Node::opMINUS);
+        $$->addchild($1);
+        $$->addchild($3);
+    }
+    |exp '*' exp {
+        LOG("new node [*][%p]\n", $$);
+        $$ = new Node(Node::opMUL);
+        $$->addchild($1);
+        $$->addchild($3);
+    }
+    |exp '/' exp {
+        LOG("new node [/][%p]\n", $$);
+        $$ = new Node(Node::opDIV);
+        $$->addchild($1);
+        $$->addchild($3);
+    }
     |exp '=' exp {
-        printf("new add node [=][%p]\n", $$);
+        LOG("new node [=][%p]\n", $$);
         $$ = new Node(Node::opASSIGN);
         $$->addchild($1);
         $$->addchild($3);
@@ -112,8 +141,8 @@ yyerror (char const *s)
 
 void print_symbol_table() {
     map<string, Node*>::iterator it;
-    printf("symbol table:\n");
+    LOG("symbol table:\n");
     for (it = symbol_table.begin(); it != symbol_table.end(); ++it) {
-        printf("symbol [%s] value [%f]\n", it->first.c_str(), it->second->value);
+        LOG("symbol [%s] value [%f]\n", it->first.c_str(), it->second->value);
     }
 }
