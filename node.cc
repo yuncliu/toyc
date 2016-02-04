@@ -64,6 +64,7 @@ double Node::exop() {
             r = nodes[0]->ex();
             LOG("while iterate result = [%f]\n", r);
             while (r > 0) {
+                r = nodes[0]->ex();
                 nodes[1]->ex();
             }
             break;
