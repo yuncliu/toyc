@@ -114,6 +114,12 @@ exp:
         $$->push_parameter($3);
         $$->push_parameter($5);
     }
+    |WHILE '(' exp ')' lines {
+        LOG("new [while] node\n");
+        $$ = new Node(Node::opWHILE);
+        $$->push_parameter($3);
+        $$->push_parameter($5);
+    }
     |PRINT '(' exp ')' {
         $$ = new Node(Node::opPRINT);
         $$->push_parameter($3);
