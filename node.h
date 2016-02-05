@@ -5,7 +5,6 @@
 using namespace std;
 
 #define  LOG(fmt, args...)  if (0) printf(fmt, ##args)
-class NodeList;
 
 class Node {
     public:
@@ -32,19 +31,10 @@ class Node {
         virtual ~Node();
         double ex();
         double exop();
-        int addchild(Node* n);
-        Node operator+ (const Node& n);
-        nodeType type;
-        opType   operation;
-        string   name;
-        double   value;
-        vector<Node*> nodes;
-        NodeList* nodelist;
-};
-
-class NodeList {
-    public:
-        vector<Node*> nodes;
-        void push_back(Node* p);
-        double ex();
+        int push_parameter(Node* n);
+        nodeType        type;
+        opType          operation;
+        string          name;
+        double          value;
+        vector<Node*>   nodes;
 };

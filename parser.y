@@ -17,7 +17,6 @@ void print_symbol_table();
     double value;              /* integer value */
     char   str[50];            /* symbol table index */
     Node*  node;
-    NodeList* nodes;
 }
 
 %token <value> NUM
@@ -27,7 +26,7 @@ void print_symbol_table();
 %left '*' '/'
 %right '^'
 %type <node> exp
-%type <nodes> lines
+%type <node> lines
 
 %%
 
@@ -48,12 +47,12 @@ input:
 
 lines:
     exp ';' {
-        $$ = new NodeList();
+        $$ = new Node(Node::opLIST);
         LOG("exp;\n");
-        $$->push_back($1);
+        $$->push_parameter($1);
     }
     |lines exp ';' {
-        $1->push_back($2);
+        $1->push_parameter($2);
         $$=$1;
     }
     |'{' lines '}' {
@@ -80,32 +79,32 @@ exp:
     |exp '+' exp {
         LOG("new node [+][%p]\n", $$);
         $$ = new Node(Node::opADD);
-        $$->addchild($1);
-        $$->addchild($3);
+        $$->push_parameter($1);
+        $$->push_parameter($3);
     }
     |exp '-' exp {
         LOG("new node [-][%p]\n", $$);
         $$ = new Node(Node::opMINUS);
-        $$->addchild($1);
-        $$->addchild($3);
+        $$->push_parameter($1);
+        $$->push_parameter($3);
     }
     |exp '*' exp {
         LOG("new node [*][%p]\n", $$);
         $$ = new Node(Node::opMUL);
-        $$->addchild($1);
-        $$->addchild($3);
+        $$->push_parameter($1);
+        $$->push_parameter($3);
     }
     |exp '/' exp {
         LOG("new node [/][%p]\n", $$);
         $$ = new Node(Node::opDIV);
-        $$->addchild($1);
-        $$->addchild($3);
+        $$->push_parameter($1);
+        $$->push_parameter($3);
     }
     |exp '=' exp {
         LOG("new node [=][%p]\n", $$);
         $$ = new Node(Node::opASSIGN);
-        $$->addchild($1);
-        $$->addchild($3);
+        $$->push_parameter($1);
+        $$->push_parameter($3);
     }
     |'(' exp ')' {
         $$ = $2;
@@ -113,12 +112,12 @@ exp:
     |IF '(' exp ')' lines {
         LOG("new [if] node\n");
         $$ = new Node(Node::opIF);
-        $$->addchild($3);
-        $$->nodelist = $5;
+        $$->push_parameter($3);
+        $$->push_parameter($5);
     }
     |PRINT '(' exp ')' {
         $$ = new Node(Node::opPRINT);
-        $$->addchild($3);
+        $$->push_parameter($3);
     }
 ;
 

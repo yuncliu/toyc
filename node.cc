@@ -38,6 +38,7 @@ double Node::ex() {
 
 double Node::exop() {
     double r = 0;
+    vector<Node*>::iterator it;
     switch(this->operation) {
         case opADD:
             LOG("execute [%f + %f]\n", nodes[0]->ex(), nodes[1]->ex());
@@ -56,9 +57,9 @@ double Node::exop() {
             return nodes[0]->ex() / nodes[1]->ex();
             break;
         case opIF:
-            printf("execute if   \n");
+            printf("executing if\n");
             if (nodes[0]->ex()) {
-                return this->nodelist->ex();
+                return this->nodes[1]->ex();
             }
             break;
         case opWHILE:
@@ -87,7 +88,9 @@ double Node::exop() {
             printf("\033[0m\n");
             break;
         case opLIST:
-            return this->nodelist->ex();
+            for (it = this->nodes.begin(); it != this->nodes.end(); ++it) {
+                (*it)->ex();
+            }
             break;
         default:
             break;
@@ -95,27 +98,7 @@ double Node::exop() {
     return 0;
 }
 
-Node Node::operator+ (const Node& n) {
-    Node t(0.0);
-    t.value = this->value + n.value;
-    return t;
-}
-
-int Node::addchild(Node* n) {
+int Node::push_parameter(Node* n) {
     this->nodes.push_back(n);
-    return 0;
-}
-
-void NodeList::push_back(Node* p) {
-    printf("add p to nodelist\n");
-    this->nodes.push_back(p);
-}
-
-double NodeList::ex() {
-    printf("list begin to execute\n");
-    vector<Node*>::iterator it;
-    for (it = this->nodes.begin(); it != this->nodes.end(); ++it) {
-        (*it)->ex();
-    }
     return 0;
 }
