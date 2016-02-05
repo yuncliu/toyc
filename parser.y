@@ -17,6 +17,7 @@ void print_symbol_table();
     double value;              /* integer value */
     char   str[50];            /* symbol table index */
     Node*  node;
+    NodeList* nodes;
 }
 
 %token <value> NUM
@@ -26,58 +27,36 @@ void print_symbol_table();
 %left '*' '/'
 %right '^'
 %type <node> exp
-%type <node> line
-%type <node> lines
+%type <nodes> lines
 
 %%
 
 input:
      %empty
-    |input line {
+    |input lines {
         LOG("input line\n");
-        $2->ex();
-        LOG("ex result = %f\n", $2->value);
+        vector<Node*>::iterator it;
+        for (it = $2->nodelist.begin(); it != $2->nodelist.end(); ++it) {
+            printf("node [%d]\n", (*it)->operation);
+        }
+        LOG("ex result = %f\n", $2->ex());
         print_symbol_table();
     }
 ;
 
-line:
-    ';' {
-        LOG("nothing\n");
-        $$= new Node(Node::opSEMICOLON);
-    }
-    |exp ';' {
+lines:
+    exp ';' {
+        $$ = new NodeList();
         LOG("exp;\n");
-        $$ = $1;
+        $$->push_back($1);
     }
-    |IF '(' exp ')' exp {
-        LOG("new [if] node\n");
-        $$ = new Node(Node::opIF);
-        $$->addchild($3);
-        $$->addchild($5);
-    }
-    |WHILE '(' exp ')' exp {
-        LOG("new [while] node\n");
-        $$ = new Node(Node::opWHILE);
-        $$->addchild($3);
-        $$->addchild($5);
-    }
-    |PRINT '(' exp ')' {
-        printf(">>%f\n", $3->ex());
-        $$ = $3;
+    |lines exp ';' {
+        $1->push_back($2);
+        $$=$1;
     }
     |'{' lines '}' {
+        printf("hellow {}\n");
         $$ = $2;
-    }
-;
-
-lines:
-     line        {$$=$1;}
-    |lines line {
-        LOG("new ; node\n");
-        $$ = new Node(Node::opSEMICOLON);
-        $$->addchild($1);
-        $$->addchild($2);
     }
 ;
 
@@ -128,6 +107,17 @@ exp:
     }
     |'(' exp ')' {
         $$ = $2;
+    }
+    |IF '(' exp ')' lines {
+        LOG("new [if] node\n");
+        $$ = new Node(Node::opIF);
+        $$->addchild($3);
+        $$->nodelist = $5;
+    }
+    |PRINT '(' exp ')' {
+        printf(">>%f\n", $3->ex());
+        $$ = new Node(Node::opPRINT);
+        $$->addchild($3);
     }
 ;
 

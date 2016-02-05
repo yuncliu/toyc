@@ -32,7 +32,7 @@
     return NUM;
 }
 
-[-+*/^()=] {
+[-+*/^()={}] {
     return *yytext;
 }
 

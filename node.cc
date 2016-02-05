@@ -78,11 +78,15 @@ double Node::exop() {
                 return nodes[0]->ex();
             }
             break;
-        case opSEMICOLON:
-            LOG("execute ;\n");
+        case opPRINT:
+            printf("\x1B[32m>>");
             for (size_t i = 0; i < this->nodes.size(); ++i) {
-                this->nodes[i]->ex();
+                printf("%f ", this->nodes[i]->ex());
             }
+            printf("\033[0m\n");
+            break;
+        case opLIST:
+            return this->nodelist->ex();
             break;
         default:
             break;
@@ -98,5 +102,17 @@ Node Node::operator+ (const Node& n) {
 
 int Node::addchild(Node* n) {
     this->nodes.push_back(n);
+    return 0;
+}
+
+void NodeList::push_back(Node* p) {
+    this->nodelist.push_back(p);
+}
+
+double NodeList::ex() {
+    vector<Node*>::iterator it;
+    for (it = this->nodelist.begin(); it != this->nodelist.end(); ++it) {
+        (*it)->ex();
+    }
     return 0;
 }
