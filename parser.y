@@ -36,10 +36,12 @@ input:
     |input lines {
         LOG("input line\n");
         vector<Node*>::iterator it;
-        for (it = $2->nodelist.begin(); it != $2->nodelist.end(); ++it) {
+        for (it = $2->nodes.begin(); it != $2->nodes.end(); ++it) {
             printf("node [%d]\n", (*it)->operation);
+            //(*it)->ex();
         }
         LOG("ex result = %f\n", $2->ex());
+        $2->ex();
         print_symbol_table();
     }
 ;
@@ -115,7 +117,6 @@ exp:
         $$->nodelist = $5;
     }
     |PRINT '(' exp ')' {
-        printf(">>%f\n", $3->ex());
         $$ = new Node(Node::opPRINT);
         $$->addchild($3);
     }

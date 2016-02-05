@@ -56,8 +56,9 @@ double Node::exop() {
             return nodes[0]->ex() / nodes[1]->ex();
             break;
         case opIF:
+            printf("execute if   \n");
             if (nodes[0]->ex()) {
-                return nodes[1]->ex();
+                return this->nodelist->ex();
             }
             break;
         case opWHILE:
@@ -106,12 +107,14 @@ int Node::addchild(Node* n) {
 }
 
 void NodeList::push_back(Node* p) {
-    this->nodelist.push_back(p);
+    printf("add p to nodelist\n");
+    this->nodes.push_back(p);
 }
 
 double NodeList::ex() {
+    printf("list begin to execute\n");
     vector<Node*>::iterator it;
-    for (it = this->nodelist.begin(); it != this->nodelist.end(); ++it) {
+    for (it = this->nodes.begin(); it != this->nodes.end(); ++it) {
         (*it)->ex();
     }
     return 0;

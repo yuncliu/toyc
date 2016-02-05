@@ -4,7 +4,7 @@
 #include <string>
 using namespace std;
 
-#define  LOG(fmt, args...)  if (1) printf(fmt, ##args)
+#define  LOG(fmt, args...)  if (0) printf(fmt, ##args)
 class NodeList;
 
 class Node {
@@ -44,7 +44,7 @@ class Node {
 
 class NodeList {
     public:
-        vector<Node*> nodelist;
+        vector<Node*> nodes;
         void push_back(Node* p);
         double ex();
 };
