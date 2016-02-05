@@ -57,7 +57,7 @@ double Node::exop() {
             return nodes[0]->ex() / nodes[1]->ex();
             break;
         case opIF:
-            printf("executing if\n");
+            LOG("executing if\n");
             if (nodes[0]->ex()) {
                 return this->nodes[1]->ex();
             }
@@ -98,7 +98,6 @@ double Node::exop() {
     return 0;
 }
 
-int Node::push_parameter(Node* n) {
+void Node::push_parameter(Node* n) {
     this->nodes.push_back(n);
-    return 0;
 }

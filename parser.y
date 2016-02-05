@@ -36,11 +36,11 @@ input:
         LOG("input line\n");
         vector<Node*>::iterator it;
         for (it = $2->nodes.begin(); it != $2->nodes.end(); ++it) {
-            printf("node [%d]\n", (*it)->operation);
-            //(*it)->ex();
+            LOG("node [%d]\n", (*it)->operation);
         }
-        LOG("ex result = %f\n", $2->ex());
-        $2->ex();
+        double r = $2->ex();
+        LOG("ex result = %f\n", r);
+        delete $2;
         print_symbol_table();
     }
 ;
@@ -56,7 +56,6 @@ lines:
         $$=$1;
     }
     |'{' lines '}' {
-        printf("hellow {}\n");
         $$ = $2;
     }
 ;

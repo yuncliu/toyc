@@ -31,7 +31,7 @@ class Node {
         virtual ~Node();
         double ex();
         double exop();
-        int push_parameter(Node* n);
+        void push_parameter(Node* n);
         nodeType        type;
         opType          operation;
         string          name;

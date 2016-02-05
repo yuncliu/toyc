@@ -3,17 +3,7 @@
 #include "lex.h"
 #include "parser.h"
 
-TEST(node, add) {
-    Node a(1);
-    Node b(1);
-    Node c(0);
-    c = a + b;
-    EXPECT_EQ(c.value, 2);
-}
-
-TEST(node, add1) {
-    Node a(1);
-    Node b(1);
-    Node c = a + b;
-    EXPECT_EQ(c.value, 2);
+TEST(node, print) {
+    yy_scan_string("print(1+1);\n");
+    EXPECT_EQ(yyparse(), 0);
 }
