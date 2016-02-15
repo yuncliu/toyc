@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "node.h"
+#include "ast.h"
 #include "lex.h"
 #include "parser.h"
 

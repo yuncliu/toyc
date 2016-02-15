@@ -13,6 +13,13 @@ Node::Node(string name, double value) {
     symbol_table.insert(pair<string, Node*>(name, this));
 }
 
+Node::Node(string name) {
+    printf("new function [%s]\n", name.c_str());
+    this->type  = FUNCTION;
+    this->name  = name;
+    symbol_table.insert(pair<string, Node*>(name, this));
+}
+
 Node::Node(opType op) {
     this->operation = op;
     this->type = OPERATION;
@@ -31,6 +38,8 @@ double Node::ex() {
             break;
         case OPERATION:
             return this->exop();
+        case FUNCTION:
+            return 123.4;
             break;
     }
     return 0;

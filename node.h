@@ -12,6 +12,7 @@ class Node {
             CONSTANT = 10,
             VARIABLES,
             OPERATION,
+            FUNCTION,
         };
         enum opType {
             opADD =1,
@@ -27,6 +28,7 @@ class Node {
         };
         Node(double value);
         Node(string name, double value);
+        Node(string name);
         Node(opType op);
         virtual ~Node();
         double ex();

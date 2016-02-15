@@ -1,13 +1,25 @@
 %{
 #include <stdlib.h>
 
-#include "node.h"
+#include "ast.h"
 #include "parser.h"
 %}
 
 %option nounput
 
 %%
+
+"double" {
+    return DOUBLE_TYPE;
+}
+
+"int" {
+    return INTEGER_TYPE;
+}
+
+"return" {
+    return RETURN;
+}
 
 "if" {
     return IF;
@@ -22,17 +34,14 @@
 }
 
 [a-z]+ {
-    memset(yylval.str, 0x00, sizeof(yylval.str));
-    strcpy(yylval.str, yytext);
-    return VAR;
+    return ID;
 }
 
 [0-9]+ {
-    yylval.value = atof(yytext);
-    return NUM;
+    return INTEGER;
 }
 
-[-+*/^()={}] {
+[-+*/^()={},] {
     return *yytext;
 }
 

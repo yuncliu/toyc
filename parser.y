@@ -4,128 +4,133 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include "node.h"
+#include "ast.h"
 using namespace std;
 int yylex (void);
 void yyerror (char const *);
 extern char* yytext;
-map<string, Node*> symbol_table;
+map<string, AST*> symbol_table;
 void print_symbol_table();
 %}
 
 %union {
-    double value;              /* integer value */
+    double dvalue;              /* double value */
+    int    ivalue;              /* integer value */
     char   str[50];            /* symbol table index */
-    Node*  node;
+    AST*        ast;
+    VarAST*     varast;
+    IdAST*      idast;
+    TypeAST*    typeast;
 }
 
-%token <value> NUM
-%token <str> VAR
+%token <dvalue> DOUBLE
+%token <ivalue> INTEGER
+%token <str> ID
+%type <str> DEF
+%token DEF
 %token IF WHILE PRINT
+%token INTEGER_TYPE
+%token DOUBLE_TYPE
+%token RETURN
 %left '-' '+'
 %left '*' '/'
 %right '^'
-%type <node> exp
-%type <node> lines
+%type <ast> exp
+%type <ast> lines
+%type <ast> function
+%type <ast> program
+%type <typeast> type
+%type <idast> identifier
+%type <varast> var
 
 %%
-
-input:
-     %empty
-    |input lines {
-        LOG("input line\n");
-        vector<Node*>::iterator it;
-        for (it = $2->nodes.begin(); it != $2->nodes.end(); ++it) {
-            LOG("node [%d]\n", (*it)->operation);
-        }
-        double r = $2->ex();
-        LOG("ex result = %f\n", r);
-        delete $2;
+program:
+    stmt_list {
+        printf("proram: stmt_list\n");
         print_symbol_table();
     }
 ;
 
-lines:
-    exp ';' {
-        $$ = new Node(Node::opLIST);
-        LOG("exp;\n");
-        $$->push_parameter($1);
+block:
+    '{' stmt_list '}' {
     }
-    |lines exp ';' {
-        $1->push_parameter($2);
-        $$=$1;
+    |'{' '}' {
+        printf("empty block\n");
     }
-    |'{' lines '}' {
-        $$ = $2;
+;
+
+stmt_list:
+    stmt {
+        printf("statement\n");
+    }
+    |stmt_list stmt {
+        printf("statement list\n");
+    }
+;
+
+stmt:
+    exp ';'
+    |function {
+        printf("stmt function\n");
+    }
+    |var ';'{
+        printf("stmt var define\n");
+    }
+    |RETURN exp ';' {
+        printf("return statement\n");
+    }
+;
+
+function:
+    type identifier '(' function_args ')' block {
+        printf("get a function\n");
+    }
+;
+
+function_args:
+    |var {
+        printf("one args\n");
+    }
+    |function_args ',' var {
+        printf("add one args\n");
+    }
+;
+
+var:
+    type identifier {
+        printf("var define\n");
+    }
+    |type identifier '=' exp {
+        printf("var define and assignmeng\n");
+        printf("xxxxxxxxx %s\n", ((TypeAST*)($1))->type.c_str());
+        printf("xxxxxxxxx %s\n", $2->name.c_str());
+        $$ = new VarAST($1, $2, $4);
+        symbol_table.insert(pair<string, AST*>($2->name, (AST*)$$));
     }
 ;
 
 exp:
-    NUM {
-        LOG("new num node[%f]\n", $1);
-        $$ = new Node($1);
-    }
-    |VAR {
-        map<string, Node*>::iterator it = symbol_table.find($1);
-        if ( it != symbol_table.end()) {
-            $$ = it->second;
-            LOG("use var node[%s] [%f]\n", $1, $$->value);
-        } else {
-            LOG("new var node[%s]\n", $1);
-            $$ = new Node($1, 0);
-        }
-    }
-    |exp '+' exp {
-        LOG("new node [+][%p]\n", $$);
-        $$ = new Node(Node::opADD);
-        $$->push_parameter($1);
-        $$->push_parameter($3);
-    }
-    |exp '-' exp {
-        LOG("new node [-][%p]\n", $$);
-        $$ = new Node(Node::opMINUS);
-        $$->push_parameter($1);
-        $$->push_parameter($3);
-    }
-    |exp '*' exp {
-        LOG("new node [*][%p]\n", $$);
-        $$ = new Node(Node::opMUL);
-        $$->push_parameter($1);
-        $$->push_parameter($3);
-    }
-    |exp '/' exp {
-        LOG("new node [/][%p]\n", $$);
-        $$ = new Node(Node::opDIV);
-        $$->push_parameter($1);
-        $$->push_parameter($3);
-    }
-    |exp '=' exp {
-        LOG("new node [=][%p]\n", $$);
-        $$ = new Node(Node::opASSIGN);
-        $$->push_parameter($1);
-        $$->push_parameter($3);
-    }
-    |'(' exp ')' {
-        $$ = $2;
-    }
-    |IF '(' exp ')' lines {
-        LOG("new [if] node\n");
-        $$ = new Node(Node::opIF);
-        $$->push_parameter($3);
-        $$->push_parameter($5);
-    }
-    |WHILE '(' exp ')' lines {
-        LOG("new [while] node\n");
-        $$ = new Node(Node::opWHILE);
-        $$->push_parameter($3);
-        $$->push_parameter($5);
-    }
-    |PRINT '(' exp ')' {
-        $$ = new Node(Node::opPRINT);
-        $$->push_parameter($3);
+    INTEGER {
+        printf("integer\n");
     }
 ;
 
+identifier:
+  ID {
+        $$ = new IdAST(yytext);
+        printf("identifier %s\n", yytext);
+  }
+;
+
+type:
+    DOUBLE_TYPE {
+        $$ = new TypeAST("double");
+    }
+    |INTEGER_TYPE {
+        $$ = new TypeAST("int");
+        printf("%s\n", "type int");
+    }
+;
 %%
 
 void
@@ -135,9 +140,9 @@ yyerror (char const *s)
 }
 
 void print_symbol_table() {
-    map<string, Node*>::iterator it;
-    LOG("symbol table:\n");
+    map<string, AST*>::iterator it;
+    printf("symbol table:\n");
     for (it = symbol_table.begin(); it != symbol_table.end(); ++it) {
-        LOG("symbol [%s] value [%f]\n", it->first.c_str(), it->second->value);
+        printf("symbol [%s]\n", it->first.c_str());
     }
 }
