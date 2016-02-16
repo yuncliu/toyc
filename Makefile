@@ -2,7 +2,7 @@ CPP=${CXX}
 LEX=flex
 YACC=bison
 CC=${CC}
-CFLAGS=-Wall -g -DDEBUG
+CFLAGS=-Wall -std=c++11 -g -DDEBUG
 LINKS	=  -lstdc++ -lm
 
 

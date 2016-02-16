@@ -1,5 +1,6 @@
 %{
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <iostream>
 #include <string>
@@ -9,7 +10,7 @@ using namespace std;
 int yylex (void);
 void yyerror (char const *);
 extern char* yytext;
-map<string, AST*> symbol_table;
+map<string, IdAST*> symbol_table;
 void print_symbol_table();
 %}
 
@@ -17,10 +18,11 @@ void print_symbol_table();
     double dvalue;              /* double value */
     int    ivalue;              /* integer value */
     char   str[50];            /* symbol table index */
-    AST*        ast;
-    VarAST*     varast;
-    IdAST*      idast;
-    TypeAST*    typeast;
+    AST*         ast;
+    IdAST*       idast;
+    ExprAST*     exprast;
+    StmtAST*     stmtast;
+    StmtlistAST* stmtlistast;
 }
 
 %token <dvalue> DOUBLE
@@ -35,18 +37,20 @@ void print_symbol_table();
 %left '-' '+'
 %left '*' '/'
 %right '^'
-%type <ast> exp
-%type <ast> lines
+%type <exprast> exp
 %type <ast> function
 %type <ast> program
-%type <typeast> type
+%type <str> type
 %type <idast> identifier
-%type <varast> var
-
+%type <idast> var
+%type <stmtast> stmt
+%type <stmtlistast> stmt_list
+%type <stmtlistast> block
 %%
 program:
     stmt_list {
         printf("proram: stmt_list\n");
+        $1->codegen();
         print_symbol_table();
     }
 ;
@@ -62,21 +66,32 @@ block:
 stmt_list:
     stmt {
         printf("statement\n");
+        $$ = new StmtlistAST();
+        $$->stmts.push_back($1);
     }
     |stmt_list stmt {
+        $1->stmts.push_back($2);
+        $$ = $1;
         printf("statement list\n");
     }
 ;
 
 stmt:
     exp ';'
+    {
+        $$ = new StmtAST();
+    }
     |function {
+        $$ = new StmtAST();
         printf("stmt function\n");
     }
     |var ';'{
+        $$ = new StmtAST();
+        $$->value = (AST*)$1;
         printf("stmt var define\n");
     }
     |RETURN exp ';' {
+        $$ = new StmtAST();
         printf("return statement\n");
     }
 ;
@@ -102,16 +117,18 @@ var:
     }
     |type identifier '=' exp {
         printf("var define and assignmeng\n");
-        printf("xxxxxxxxx %s\n", ((TypeAST*)($1))->type.c_str());
-        printf("xxxxxxxxx %s\n", $2->name.c_str());
-        $$ = new VarAST($1, $2, $4);
-        symbol_table.insert(pair<string, AST*>($2->name, (AST*)$$));
+        $$ = $2;
+        $$->type = string($1);
+        $$->value = (AST*)$4;
+        symbol_table.insert(pair<string, IdAST*>($2->name, $$));
     }
 ;
 
 exp:
     INTEGER {
         printf("integer\n");
+        $$ = new ExprAST();
+        $$->value = atoi(yytext);
     }
 ;
 
@@ -124,10 +141,10 @@ identifier:
 
 type:
     DOUBLE_TYPE {
-        $$ = new TypeAST("double");
+        strcpy($$, "double");
     }
     |INTEGER_TYPE {
-        $$ = new TypeAST("int");
+        strcpy($$, "int");
         printf("%s\n", "type int");
     }
 ;
@@ -140,9 +157,11 @@ yyerror (char const *s)
 }
 
 void print_symbol_table() {
-    map<string, AST*>::iterator it;
+    map<string, IdAST*>::iterator it;
     printf("symbol table:\n");
     for (it = symbol_table.begin(); it != symbol_table.end(); ++it) {
-        printf("symbol [%s]\n", it->first.c_str());
+        printf("symbol [%s] type [%s]\n",
+            it->second->name.c_str(),
+            it->second->type.c_str());
     }
 }

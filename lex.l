@@ -3,6 +3,9 @@
 
 #include "ast.h"
 #include "parser.h"
+#if __cplusplus >= 201103L
+    #define register
+#endif
 %}
 
 %option nounput
