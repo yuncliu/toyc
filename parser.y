@@ -10,8 +10,6 @@ using namespace std;
 int yylex (void);
 void yyerror (char const *);
 extern char* yytext;
-//map<string, IdAST*> symbol_table;
-//void print_symbol_table();
 %}
 
 %union {
@@ -53,7 +51,6 @@ program:
     function {
         printf("proram: stmt_list\n");
         $1->codegen();
-        //print_symbol_table();
     }
 ;
 
@@ -157,14 +154,3 @@ yyerror (char const *s)
 {
     fprintf (stderr, "%s\n", s);
 }
-/*
-void print_symbol_table() {
-    map<string, IdAST*>::iterator it;
-    printf("symbol table:\n");
-    for (it = symbol_table.begin(); it != symbol_table.end(); ++it) {
-        printf("symbol [%s] type [%s]\n",
-            it->second->name.c_str(),
-            it->second->type.c_str());
-    }
-}
-*/

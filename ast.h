@@ -11,9 +11,18 @@
 #include <string>
 #include <vector>
 #define  LOG(fmt, args...)  if (0) printf(fmt, ##args)
-using namespace std;
 using namespace llvm;
 
+class ExprAST;
+class IdExprAST;
+class IntExprAST;
+class VarExprAST;
+class BinaryExprAST;
+class StmtAST;
+class ReturnStmtAST;
+class BlockAST;
+class FuncArgsAST;
+class FuncTypeAST;
 class FuncAST;
 
 class Single {
@@ -37,7 +46,6 @@ class Single {
     }
 };
 
-class BlockAST;
 
 class ExprAST {
     public:
@@ -51,7 +59,7 @@ class IdExprAST:public ExprAST{
     public:
         std::string      name;
         std::string      type;
-        IdExprAST(string s);
+        IdExprAST(std::string s);
         virtual ~IdExprAST();
         Value* codegen(BlockAST* block);
 };
@@ -66,9 +74,9 @@ class IntExprAST: ExprAST {
 
 class VarExprAST: ExprAST {
     public:
-        string type;
-        string name;
-        VarExprAST(string t, string n);
+        std::string type;
+        std::string name;
+        VarExprAST(std::string t, std::string n);
         ~VarExprAST();
         Value* codegen(BlockAST* block);
 };
@@ -104,8 +112,8 @@ class ReturnStmtAST: public StmtAST {
 
 class BlockAST {
     public:
-        vector<StmtAST*> stmts;
-        map<string, Value*> locals;
+        std::vector<StmtAST*> stmts;
+        std::map<std::string, Value*> locals;
         BlockAST();
         ~BlockAST();
         virtual void codegen();
@@ -113,13 +121,13 @@ class BlockAST {
 
 class FuncArgsAST {
     public:
-        std::vector<string> names;
+        std::vector<std::string> names;
         std::vector<Type*>  args;
         FuncArgsAST();
         ~FuncArgsAST();
-        void addarg(string name, string type);
-        std::vector<string>  getNames();
-        std::vector<Type*>  getArgs();
+        void addarg(std::string name, std::string type);
+        std::vector<std::string> getNames();
+        std::vector<Type*> getArgs();
 };
 
 class FuncTypeAST {
@@ -132,10 +140,10 @@ class FuncTypeAST {
 
 class FuncAST {
     public:
-        string       name;
+        std::string name;
         FuncTypeAST* functype;
         BlockAST* body;
-        FuncAST(string n);
+        FuncAST(std::string n);
         ~FuncAST();
         Function* codegen();
 };
