@@ -18,10 +18,9 @@ extern char* yytext;
     double dvalue;              /* double value */
     int    ivalue;              /* integer value */
     char   str[50];            /* symbol table index */
-    AST*         ast;
     ExprAST*     exprast;
     StmtAST*     stmtast;
-    StmtlistAST* stmtlistast;
+    BlockAST* BlockAST;
     FuncAST*     funast;
     FuncArgsAST*     funcargsast;
     VarExprAST*      varast;
@@ -46,8 +45,8 @@ extern char* yytext;
 %type <exprast> identifier
 %type <exprast> var
 %type <stmtast> stmt
-%type <stmtlistast> stmt_list
-%type <stmtlistast> block
+%type <BlockAST> stmt_list
+%type <BlockAST> block
 %type <funcargsast> function_args
 %%
 program:
@@ -69,14 +68,12 @@ block:
 
 stmt_list:
     stmt {
-        printf("statement\n");
-        $$ = new StmtlistAST();
+        $$ = new BlockAST();
         $$->stmts.push_back($1);
     }
     |stmt_list stmt {
         $1->stmts.push_back($2);
         $$ = $1;
-        printf("statement list\n");
     }
 ;
 
@@ -85,9 +82,7 @@ stmt:
         $$ = new StmtAST($1);
     }
     |RETURN exp ';' {
-        printf("xxxxxxxxxxxxxxxxxxxxx\n");
         $$ = (StmtAST*)new ReturnStmtAST($2);
-        printf("return statement\n");
     }
 ;
 
