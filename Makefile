@@ -2,8 +2,8 @@ CPP=${CXX}
 LEX=flex
 YACC=bison
 CC=${CC}
-CFLAGS=-Wall -std=c++11 -g -DDEBUG
-LINKS	=  -lstdc++ -lm
+CFLAGS=-Wall -std=c++11 -g -DDEBUG `llvm-config-3.7 --cxxflags --ldflags --system-libs --libs core`
+LINKS	=  -lstdc++ -lm `llvm-config-3.7 --cxxflags --ldflags --system-libs --libs core`
 
 
 EXEOBJS	= lex.o \

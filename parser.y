@@ -23,6 +23,9 @@ void print_symbol_table();
     ExprAST*     exprast;
     StmtAST*     stmtast;
     StmtlistAST* stmtlistast;
+    FuncAST*     funast;
+    FuncArgsAST*     funcargsast;
+    VarAST*      varast;
 }
 
 %token <dvalue> DOUBLE
@@ -38,17 +41,18 @@ void print_symbol_table();
 %left '*' '/'
 %right '^'
 %type <exprast> exp
-%type <ast> function
+%type <funast> function
 %type <ast> program
 %type <str> type
 %type <idast> identifier
-%type <idast> var
+%type <varast> var
 %type <stmtast> stmt
 %type <stmtlistast> stmt_list
 %type <stmtlistast> block
+%type <funcargsast> function_args
 %%
 program:
-    stmt_list {
+    function {
         printf("proram: stmt_list\n");
         $1->codegen();
         print_symbol_table();
@@ -57,6 +61,7 @@ program:
 
 block:
     '{' stmt_list '}' {
+        $$ = $2;
     }
     |'{' '}' {
         printf("empty block\n");
@@ -81,10 +86,6 @@ stmt:
     {
         $$ = new StmtAST();
     }
-    |function {
-        $$ = new StmtAST();
-        printf("stmt function\n");
-    }
     |var ';'{
         $$ = new StmtAST();
         $$->value = (AST*)$1;
@@ -99,28 +100,31 @@ stmt:
 function:
     type identifier '(' function_args ')' block {
         printf("get a function\n");
+        $$ = new FuncAST($2->name);
+        $$->functype->arg_list = $4;
+        $$->body = $6;
     }
 ;
 
 function_args:
-    |var {
+    var {
+        $$ = new FuncArgsAST();
+        $$->addarg($1->name, $1->type);
         printf("one args\n");
     }
     |function_args ',' var {
+        $1->addarg($3->name, $3->type);
         printf("add one args\n");
     }
 ;
 
 var:
     type identifier {
+        $$ = new VarAST($1, $2->name);
         printf("var define\n");
     }
     |type identifier '=' exp {
         printf("var define and assignmeng\n");
-        $$ = $2;
-        $$->type = string($1);
-        $$->value = (AST*)$4;
-        symbol_table.insert(pair<string, IdAST*>($2->name, $$));
     }
 ;
 
