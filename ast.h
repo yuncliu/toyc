@@ -54,25 +54,7 @@ class AST {
         }
 };
 
-class ExprAST;
-
-class IdAST:public AST{
-    public:
-    string      name;
-    string      type;
-    AST*        value;
-    IdAST() {
-    }
-    IdAST(string s) :name(s){
-    }
-    virtual ~IdAST() {
-    }
-    virtual Value* codegen() {
-        value->codegen();
-        printf("id ast code gen\n");
-        return 0;
-    }
-};
+class StmtlistAST;
 
 class ExprAST {
     public:
@@ -80,9 +62,26 @@ class ExprAST {
     }
     virtual ~ExprAST() {
     }
+    virtual Value* codegen(StmtlistAST* block) {
+        return NULL;
+    }
+
     virtual Value* codegen() {
         return NULL;
     }
+};
+
+class IdExprAST:public ExprAST{
+    public:
+    string      name;
+    string      type;
+    IdExprAST() {
+    }
+    IdExprAST(string s) :name(s){
+    }
+    virtual ~IdExprAST() {
+    }
+    virtual Value* codegen(StmtlistAST* block);
 };
 
 class IntExprAST: ExprAST {
@@ -97,6 +96,21 @@ class IntExprAST: ExprAST {
         return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), value, true);
     }
 };
+
+class VarExprAST: ExprAST {
+    public:
+        string type;
+        string name;
+        VarExprAST(string t, string n)
+            :type(t), name(n)
+        { }
+        ~VarExprAST() {
+        }
+        Value* codegen() {
+            return NULL;
+        }
+};
+
 
 class BinaryExprAST {
     public:
@@ -114,27 +128,18 @@ class BinaryExprAST {
     }
 };
 
-class VarAST {
-    public:
-        string type;
-        string name;
-        VarAST(string t, string n)
-            :type(t), name(n)
-        { }
-        ~VarAST() {
-        }
-};
-
 class FuncAST;
 
 class StmtAST {
     public:
-        AST* value;
+        ExprAST* value;
         StmtAST():value(NULL) {
+        }
+        StmtAST(ExprAST* e):value(e) {
         }
         ~StmtAST() {
         }
-        virtual void codegen() {
+        virtual void codegen(StmtlistAST* block) {
             if (NULL != value) {
                 value->codegen();
             }
@@ -150,30 +155,31 @@ class ReturnStmtAST: public StmtAST {
         }
         ~ReturnStmtAST(){
         }
-        void codegen() {
+        //void codegen() {
+        virtual void codegen(StmtlistAST* block) {
             printf("codegen of Return Stmt\n");
-            Value *retval = expr->codegen();
+            Value *retval = expr->codegen(block);
             Single::getBuilder()->CreateRet(retval);
         }
 };
 
-class StmtlistAST:public AST {
+class StmtlistAST {
     public:
         vector<StmtAST*> stmts;
+        map<string, Value*> locals;
         StmtlistAST() {
         }
         ~StmtlistAST(){
         }
-        virtual Value* codegen() {
+        virtual void codegen() {
             if (stmts.size() == 0 ) {
                 printf("no statements\n");
             } else {
                 printf("%ld statements\n", stmts.size());
             }
             for (auto i:stmts) {
-                i->codegen();
+                i->codegen(this);
             }
-            return 0;
         }
 };
 
@@ -232,6 +238,14 @@ class FuncAST {
         Function* codegen() {
             Function* F = Function::Create(functype->codegen(), Function::ExternalLinkage, name,
                     Single::getModule());
+            // Set names for all arguments.
+            unsigned Idx = 0;
+            for (Function::arg_iterator AI = F->arg_begin();
+                    Idx != functype->arg_list->names.size();
+                    ++AI, ++Idx) {
+                AI->setName(functype->arg_list->names[Idx]);
+                body->locals.insert(pair<string, Value*>(functype->arg_list->names[Idx], AI));
+            }
             BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
             Single::getBuilder()->SetInsertPoint(BB);
             if (NULL != body) {
@@ -243,10 +257,8 @@ class FuncAST {
         }
 };
 
-
 class ProgramAST:public AST {
     public:
 };
-
 
 #endif

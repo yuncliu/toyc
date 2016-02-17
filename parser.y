@@ -10,8 +10,8 @@ using namespace std;
 int yylex (void);
 void yyerror (char const *);
 extern char* yytext;
-map<string, IdAST*> symbol_table;
-void print_symbol_table();
+//map<string, IdAST*> symbol_table;
+//void print_symbol_table();
 %}
 
 %union {
@@ -19,13 +19,12 @@ void print_symbol_table();
     int    ivalue;              /* integer value */
     char   str[50];            /* symbol table index */
     AST*         ast;
-    IdAST*       idast;
     ExprAST*     exprast;
     StmtAST*     stmtast;
     StmtlistAST* stmtlistast;
     FuncAST*     funast;
     FuncArgsAST*     funcargsast;
-    VarAST*      varast;
+    VarExprAST*      varast;
 }
 
 %token <dvalue> DOUBLE
@@ -44,8 +43,8 @@ void print_symbol_table();
 %type <funast> function
 %type <ast> program
 %type <str> type
-%type <idast> identifier
-%type <varast> var
+%type <exprast> identifier
+%type <exprast> var
 %type <stmtast> stmt
 %type <stmtlistast> stmt_list
 %type <stmtlistast> block
@@ -55,7 +54,7 @@ program:
     function {
         printf("proram: stmt_list\n");
         $1->codegen();
-        print_symbol_table();
+        //print_symbol_table();
     }
 ;
 
@@ -82,17 +81,11 @@ stmt_list:
 ;
 
 stmt:
-    exp ';'
-    {
-        $$ = new StmtAST();
-    }
-    |var ';'{
-        $$ = new StmtAST();
-        $$->value = (AST*)$1;
-        printf("stmt var define\n");
+    exp ';' {
+        $$ = new StmtAST($1);
     }
     |RETURN exp ';' {
-        //$$ = new StmtAST();
+        printf("xxxxxxxxxxxxxxxxxxxxx\n");
         $$ = (StmtAST*)new ReturnStmtAST($2);
         printf("return statement\n");
     }
@@ -101,7 +94,7 @@ stmt:
 function:
     type identifier '(' function_args ')' block {
         printf("get a function\n");
-        $$ = new FuncAST($2->name);
+        $$ = new FuncAST(((IdExprAST*)$2)->name);
         $$->functype->arg_list = $4;
         $$->body = $6;
     }
@@ -110,18 +103,20 @@ function:
 function_args:
     var {
         $$ = new FuncArgsAST();
-        $$->addarg($1->name, $1->type);
+        VarExprAST* p = (VarExprAST*)$1;
+        $$->addarg(p->name, p->type);
         printf("one args\n");
     }
     |function_args ',' var {
-        $1->addarg($3->name, $3->type);
+        VarExprAST* p = (VarExprAST*)$3;
+        $1->addarg(p->name, p->type);
         printf("add one args\n");
     }
 ;
 
 var:
     type identifier {
-        $$ = new VarAST($1, $2->name);
+        $$ = (ExprAST*)new VarExprAST($1, ((IdExprAST*)$2)->name);
         printf("var define\n");
     }
     |type identifier '=' exp {
@@ -139,11 +134,14 @@ exp:
     | exp '+' exp {
         $$ = (ExprAST*)new BinaryExprAST($1, $3);
     }
+    | identifier {
+        $$ = (ExprAST*)$1;
+    }
 ;
 
 identifier:
   ID {
-        $$ = new IdAST(yytext);
+        $$ = new IdExprAST(yytext);
         printf("identifier %s\n", yytext);
   }
 ;
@@ -164,7 +162,7 @@ yyerror (char const *s)
 {
     fprintf (stderr, "%s\n", s);
 }
-
+/*
 void print_symbol_table() {
     map<string, IdAST*>::iterator it;
     printf("symbol table:\n");
@@ -174,3 +172,4 @@ void print_symbol_table() {
             it->second->type.c_str());
     }
 }
+*/

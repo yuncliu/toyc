@@ -2,13 +2,12 @@ CPP=${CXX}
 LEX=flex
 YACC=bison
 CC=${CC}
-CFLAGS=-Wall -std=c++11 -g -DDEBUG `llvm-config-3.7 --cxxflags --ldflags --system-libs --libs core`
-LINKS	=  -lstdc++ -lm `llvm-config-3.7 --cxxflags --ldflags --system-libs --libs core`
-
+CFLAGS=-Wall -std=c++11 -g -DDEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
+LINKS	=  -lstdc++ -lm `llvm-config-3.7 --ldflags --libs --system-libs --libs core`
 
 EXEOBJS	= lex.o \
 			parser.o \
-			node.o \
+			ast.o \
 			main.o
 
 LEX_CC		= lex.cc
@@ -20,7 +19,7 @@ TEST=t.out
 VPATH		 = ./
 
 INC=-I.\
-	-I./bits
+	-I/usr/lib/llvm-3.7/include
 
 LIB=-L.
 
