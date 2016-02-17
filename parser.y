@@ -92,7 +92,8 @@ stmt:
         printf("stmt var define\n");
     }
     |RETURN exp ';' {
-        $$ = new StmtAST();
+        //$$ = new StmtAST();
+        $$ = (StmtAST*)new ReturnStmtAST($2);
         printf("return statement\n");
     }
 ;
@@ -130,9 +131,13 @@ var:
 
 exp:
     INTEGER {
-        printf("integer\n");
-        $$ = new ExprAST();
-        $$->value = atoi(yytext);
+        printf("xxxxxxxxxxxxx integer\n");
+        //$$ = new ExprAST();
+        //$$->value = atoi(yytext);
+        $$ = (ExprAST*)new IntExprAST(atoi(yytext));
+    }
+    | exp '+' exp {
+        $$ = (ExprAST*)new BinaryExprAST($1, $3);
     }
 ;
 

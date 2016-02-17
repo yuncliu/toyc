@@ -74,13 +74,43 @@ class IdAST:public AST{
     }
 };
 
-class ExprAST:public AST {
+class ExprAST {
     public:
-    char op;
-    int value;
     ExprAST() {
     }
-    ~ExprAST() {
+    virtual ~ExprAST() {
+    }
+    virtual Value* codegen() {
+        return NULL;
+    }
+};
+
+class IntExprAST: ExprAST {
+    public:
+    int value;
+    IntExprAST(int i):value(i) {
+    }
+    ~IntExprAST() {
+    }
+    Value* codegen() {
+        printf("xxxxxxxxxxxxxxxxxxxxxxxxxx\n");
+        return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), value, true);
+    }
+};
+
+class BinaryExprAST {
+    public:
+    char op;
+    ExprAST* left;
+    ExprAST* right;
+    BinaryExprAST(ExprAST* l, ExprAST* r):left(l), right(r) {
+    }
+    virtual ~BinaryExprAST() {
+    }
+    virtual Value* codegen() {
+        Value* l = left->codegen();
+        Value* r = right->codegen();
+        return Single::getBuilder()->CreateAdd(l, r);
     }
 };
 
@@ -97,20 +127,33 @@ class VarAST {
 
 class FuncAST;
 
-class StmtAST:public AST {
+class StmtAST {
     public:
         AST* value;
         StmtAST():value(NULL) {
         }
         ~StmtAST() {
         }
-        virtual Value* codegen() {
+        virtual void codegen() {
             if (NULL != value) {
                 value->codegen();
             }
             Value *retval = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 10, true);
             Single::getBuilder()->CreateRet(retval);
-            return 0;
+        }
+};
+
+class ReturnStmtAST: public StmtAST {
+    public:
+        ExprAST* expr;
+        ReturnStmtAST(ExprAST* e): expr(e) {
+        }
+        ~ReturnStmtAST(){
+        }
+        void codegen() {
+            printf("codegen of Return Stmt\n");
+            Value *retval = expr->codegen();
+            Single::getBuilder()->CreateRet(retval);
         }
 };
 
