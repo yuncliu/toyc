@@ -45,6 +45,9 @@ class Single {
         return b;
     }
     static std::map<std::string, Value*> globalNamedValue;
+    static bool IsGlobal(std::string name) {
+        return Single::globalNamedValue.find(name) != Single::globalNamedValue.end();
+    }
 };
 
 

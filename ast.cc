@@ -109,6 +109,9 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
             if (r->getType()->isPointerTy()) {
                 r = Single::getBuilder()->CreateLoad(r);
             }
+            if (Single::IsGlobal(l->getName().data())) {
+                ((GlobalVariable*)l)->setInitializer((Constant*)r);
+            }
             return Single::getBuilder()->CreateStore(r, l);
             break;
         default:
@@ -160,7 +163,9 @@ VarStmtAST::~VarStmtAST() {
 }
 
 void VarStmtAST::codegen(BlockAST* block) {
-    value->codegen(block);
+    Value* p = value->codegen(block);
+    printf("fuck global varable\n");
+    p->getType()->dump();
 }
 
 // BlockAST
