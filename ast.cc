@@ -96,6 +96,7 @@ StmtAST::~StmtAST() {
 
 void StmtAST::codegen(BlockAST* block) {
     if (NULL != value) {
+        printf("hhhhhhhhhhhhhhhhhhhhhhhh\n");
         value->codegen(block);
     }
 }
@@ -121,10 +122,17 @@ VarStmtAST::~VarStmtAST() {
 
 void VarStmtAST::codegen(BlockAST* block) {
     if (block->block != NULL) {
+        // allocate on stack
         IRBuilder<> Builder(block->block);
         AllocaInst *varalloc = Builder.CreateAlloca(Builder.getInt32Ty());
         varalloc->setName(((VarExprAST*)var)->name);
         block->locals.insert(std::pair<std::string, Value*>(varalloc->getName(), varalloc));
+    }
+    else {
+        // global value
+        GlobalVariable* p = new GlobalVariable(*Single::getModule(), Type::getInt32Ty(getGlobalContext()),
+                false, Function::InternalLinkage, NULL);
+        p->setName(((VarExprAST*)var)->name);
     }
 }
 
