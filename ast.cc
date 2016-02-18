@@ -191,24 +191,26 @@ std::vector<Type*> FuncArgsAST::getArgs() {
     return args;
 }
 
-// FuncTypeAST
-FuncTypeAST::FuncTypeAST(Type* rty, FuncArgsAST* args)
-    :returnty(rty), arg_list(args) {
+/**
+ *FuncAST
+ *param[in] i      id of function name
+ *param[in] rty    return type
+ *param[in] args   args
+ */
+FuncTypeAST::FuncTypeAST(IdExprAST* i, Type* rty, FuncArgsAST* args)
+    :id(i), returnty(rty), arg_list(args) {
 }
 
 FuncTypeAST::~FuncTypeAST(){
 }
 
 FunctionType* FuncTypeAST::codegen() {
-    FunctionType *FT = FunctionType::get(Type::getInt32Ty(getGlobalContext()),
-            arg_list->getArgs(), false);
-    return FT;
+    return FunctionType::get(returnty, arg_list->getArgs(), false);
 }
 
 // FuncAST
-FuncAST::FuncAST(std::string n)
-    :name(n) {
-    functype = NULL;
+FuncAST::FuncAST(FuncTypeAST* f, BlockAST* b)
+    :functype(f), body(b){
 }
 
 FuncAST::~FuncAST() {
@@ -218,7 +220,7 @@ FuncAST::~FuncAST() {
 void FuncAST::codegen(BlockAST* block) {
     Function* F = Function::Create(functype->codegen(),
             Function::ExternalLinkage,
-            name,
+            functype->id->name,
             Single::getModule());
     // Set names for all arguments.
     unsigned Idx = 0;
@@ -236,7 +238,4 @@ void FuncAST::codegen(BlockAST* block) {
     } else {
         printf("body is NULL\n");
     }
-}
-void FuncAST::addbody(BlockAST* b) {
-    this->body = b;
 }

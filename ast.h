@@ -141,23 +141,22 @@ class FuncArgsAST {
 
 class FuncTypeAST {
     public:
+        IdExprAST* id;
         Type* returnty;
         FuncArgsAST* arg_list;
-        FuncTypeAST(Type* rty, FuncArgsAST* args);
+        FuncTypeAST(IdExprAST* i, Type* rty, FuncArgsAST* args);
         ~FuncTypeAST();
         FunctionType* codegen();
 };
 
 class FuncAST: StmtAST {
     public:
-        std::string name;
         FuncTypeAST* functype;
         BlockAST* body;
-        FuncAST(std::string n);
+        FuncAST(FuncTypeAST* f, BlockAST* b);
         ~FuncAST();
         //Function* codegen();
         virtual void codegen(BlockAST* block);
-        void addbody(BlockAST* b);
 };
 
 class ProgramAST {

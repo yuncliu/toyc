@@ -20,6 +20,7 @@ extern char* yytext;
     StmtAST*     stmtast;
     BlockAST*    blockast;
     FuncAST*     funast;
+    FuncTypeAST* functypeast;
     FuncArgsAST* funcargsast;
     VarExprAST*  varast;
     Type*        ty;
@@ -38,7 +39,6 @@ extern char* yytext;
 %left '*' '/'
 %right '^'
 %type <exprast> exp
-%type <funast> function
 %type <ast> program
 %type <ty> type
 %type <exprast> identifier
@@ -46,6 +46,8 @@ extern char* yytext;
 %type <stmtast> stmt
 %type <blockast> stmt_list
 %type <blockast> block
+%type <funast> function
+%type <functypeast> function_prototype
 %type <funcargsast> function_args
 %%
 program:
@@ -90,12 +92,14 @@ stmt:
 ;
 
 function:
-    type identifier '(' function_args ')' block {
-        printf("get a function\n");
-        FuncTypeAST* fty = new FuncTypeAST($1, $4);
-        $$ = new FuncAST(((IdExprAST*)$2)->name);
-        $$->functype = fty;
-        $$->addbody($6);
+    function_prototype block {
+        $$ = new FuncAST($1, $2);
+    }
+;
+
+function_prototype:
+    type identifier '(' function_args ')' {
+        $$ = new FuncTypeAST((IdExprAST*)$2, $1, $4);
     }
 ;
 
