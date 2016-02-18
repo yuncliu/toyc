@@ -20,7 +20,7 @@ extern char* yytext;
     StmtAST*     stmtast;
     BlockAST*    blockast;
     FuncAST*     funast;
-    FuncTypeAST* functypeast;
+    FuncProtoType* FuncProtoType;
     FuncArgsAST* funcargsast;
     VarExprAST*  varast;
     Type*        ty;
@@ -47,7 +47,7 @@ extern char* yytext;
 %type <blockast> stmt_list
 %type <blockast> block
 %type <funast> function
-%type <functypeast> function_prototype
+%type <FuncProtoType> function_prototype
 %type <funcargsast> function_args
 %%
 program:
@@ -99,7 +99,7 @@ function:
 
 function_prototype:
     type identifier '(' function_args ')' {
-        $$ = new FuncTypeAST((IdExprAST*)$2, $1, $4);
+        $$ = new FuncProtoType((IdExprAST*)$2, $1, $4);
     }
 ;
 
@@ -121,7 +121,7 @@ function_args:
 
 var:
     type identifier {
-        $$ = (ExprAST*)new VarExprAST($1, ((IdExprAST*)$2)->name);
+        $$ = (ExprAST*)new VarExprAST($1, ((IdExprAST*)$2)->getName());
         printf("var define\n");
     }
     |type identifier '=' exp {

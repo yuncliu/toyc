@@ -22,7 +22,7 @@ class StmtAST;
 class ReturnStmtAST;
 class BlockAST;
 class FuncArgsAST;
-class FuncTypeAST;
+class FuncProtoType;
 class FuncAST;
 
 class Single {
@@ -56,12 +56,12 @@ class ExprAST {
 };
 
 class IdExprAST:public ExprAST{
-    public:
         std::string      name;
-        std::string      type;
+    public:
         IdExprAST(std::string s);
         virtual ~IdExprAST();
         Value* codegen(BlockAST* block);
+        std::string getName();
 };
 
 class IntExprAST: ExprAST {
@@ -139,24 +139,25 @@ class FuncArgsAST {
         std::vector<Type*> getArgs();
 };
 
-class FuncTypeAST {
+class FuncProtoType {
     public:
-        IdExprAST* id;
-        Type* returnty;
-        FuncArgsAST* arg_list;
-        FuncTypeAST(IdExprAST* i, Type* rty, FuncArgsAST* args);
-        ~FuncTypeAST();
+        IdExprAST* Id;
+        Type* ReturnTy;
+        FuncArgsAST* Args;
+        FuncProtoType(IdExprAST* i, Type* rty, FuncArgsAST* args);
+        ~FuncProtoType();
         FunctionType* codegen();
+        std::string getName();
 };
 
 class FuncAST: StmtAST {
     public:
-        FuncTypeAST* functype;
-        BlockAST* body;
-        FuncAST(FuncTypeAST* f, BlockAST* b);
+        FuncProtoType* ProtoType;
+        BlockAST* FuncBody;
+        FuncAST(FuncProtoType* f, BlockAST* b);
         ~FuncAST();
-        //Function* codegen();
         virtual void codegen(BlockAST* block);
+        std::string getName();
 };
 
 class ProgramAST {
