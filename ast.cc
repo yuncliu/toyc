@@ -11,10 +11,6 @@ Value* ExprAST::codegen(BlockAST* block) {
     return NULL;
 }
 
-Value* ExprAST::codegen() {
-    return NULL;
-}
-
 // IdExprAST
 IdExprAST::IdExprAST(std::string s) :name(s){
 }
@@ -25,7 +21,14 @@ IdExprAST::~IdExprAST() {
 Value* IdExprAST::codegen(BlockAST* block) {
     std::map<std::string, Value*>::iterator it = block->locals.find(name);
     if (it != block->locals.end()) {
-        return it->second;
+        Type* ty = it->second->getType();
+        if (ty->isPointerTy()) {
+            // this is pointer, allocated on stack, so used load
+            return Single::getBuilder()->CreateLoad(it->second);
+        }
+        else {
+            return it->second;
+        }
     }
     return NULL;
 }
@@ -54,17 +57,31 @@ Value* VarExprAST::codegen(BlockAST* block) {
 }
 
 // BinaryExprAST
-BinaryExprAST::BinaryExprAST(ExprAST* l, ExprAST* r)
-:left(l), right(r) {
+BinaryExprAST::BinaryExprAST(char op, ExprAST* l, ExprAST* r)
+:op(op), left(l), right(r) {
 }
 
 BinaryExprAST::~BinaryExprAST() {
 }
 
 Value* BinaryExprAST::codegen(BlockAST* block) {
-    Value* l = left->codegen();
-    Value* r = right->codegen();
-    return Single::getBuilder()->CreateAdd(l, r);
+    Value* l = NULL;
+    Value* r = NULL;
+    switch(this->op) {
+        case '+':
+            l = left->codegen(block);
+            r = right->codegen(block);
+            return Single::getBuilder()->CreateAdd(l, r);
+            break;
+        case '=':
+            l = left->codegen(block);
+            r = right->codegen(block);
+            return Single::getBuilder()->CreateStore(r, l);
+            break;
+        default:
+            break;
+    }
+    return NULL;
 }
 
 //StmtAST
@@ -79,10 +96,8 @@ StmtAST::~StmtAST() {
 
 void StmtAST::codegen(BlockAST* block) {
     if (NULL != value) {
-        value->codegen();
+        value->codegen(block);
     }
-    Value *retval = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 10, true);
-    Single::getBuilder()->CreateRet(retval);
 }
 
 // ReturnStmtAST
@@ -93,14 +108,30 @@ ReturnStmtAST::~ReturnStmtAST() {
 }
 
 void ReturnStmtAST::codegen(BlockAST* block) {
-    printf("codegen of Return Stmt\n");
     Value *retval = expr->codegen(block);
     Single::getBuilder()->CreateRet(retval);
 }
 
-// BlockAST
-BlockAST::BlockAST() {
+//VarStmtAST
+VarStmtAST::VarStmtAST(ExprAST* e): var(e) {
 }
+
+VarStmtAST::~VarStmtAST() {
+}
+
+void VarStmtAST::codegen(BlockAST* block) {
+    if (block->block != NULL) {
+        IRBuilder<> Builder(block->block);
+        AllocaInst *varalloc = Builder.CreateAlloca(Builder.getInt32Ty());
+        varalloc->setName(((VarExprAST*)var)->name);
+        block->locals.insert(std::pair<std::string, Value*>(varalloc->getName(), varalloc));
+    }
+}
+
+// BlockAST
+BlockAST::BlockAST():block(NULL) {
+}
+
 BlockAST::~BlockAST() {
 }
 
@@ -149,14 +180,15 @@ FunctionType* FuncTypeAST::codegen() {
 
 // FuncAST
 FuncAST::FuncAST(std::string n)
-:name(n) {
-    functype = new FuncTypeAST();
-}
+    :name(n) {
+        functype = new FuncTypeAST();
+    }
 
 FuncAST::~FuncAST() {
 }
 
-Function* FuncAST::codegen() {
+//Function* FuncAST::codegen() {
+void FuncAST::codegen(BlockAST* block) {
     Function* F = Function::Create(functype->codegen(),
             Function::ExternalLinkage,
             name,
@@ -170,11 +202,14 @@ Function* FuncAST::codegen() {
         body->locals.insert(std::pair<std::string, Value*>(functype->arg_list->names[Idx], AI));
     }
     BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
+    this->body->block = BB;
     Single::getBuilder()->SetInsertPoint(BB);
     if (NULL != body) {
         body->codegen();
     } else {
         printf("body is NULL\n");
     }
-    return F;
+}
+void FuncAST::addbody(BlockAST* b) {
+    this->body = b;
 }

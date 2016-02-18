@@ -48,7 +48,7 @@ extern char* yytext;
 %type <funcargsast> function_args
 %%
 program:
-    function {
+    stmt_list {
         printf("proram: stmt_list\n");
         $1->codegen();
     }
@@ -78,8 +78,14 @@ stmt:
     exp ';' {
         $$ = new StmtAST($1);
     }
+    |var ';' {
+        $$ = (StmtAST*)new VarStmtAST($1);
+    }
     |RETURN exp ';' {
         $$ = (StmtAST*)new ReturnStmtAST($2);
+    }
+    |function {
+        $$ = (StmtAST*)$1;
     }
 ;
 
@@ -118,13 +124,13 @@ var:
 
 exp:
     INTEGER {
-        printf("xxxxxxxxxxxxx integer\n");
-        //$$ = new ExprAST();
-        //$$->value = atoi(yytext);
         $$ = (ExprAST*)new IntExprAST(atoi(yytext));
     }
     | exp '+' exp {
-        $$ = (ExprAST*)new BinaryExprAST($1, $3);
+        $$ = (ExprAST*)new BinaryExprAST('+', $1, $3);
+    }
+    | exp '=' exp {
+        $$ = (ExprAST*)new BinaryExprAST('=', $1, $3);
     }
     | identifier {
         $$ = (ExprAST*)$1;

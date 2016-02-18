@@ -52,7 +52,6 @@ class ExprAST {
         ExprAST();
         virtual ~ExprAST();
         virtual Value* codegen(BlockAST* block);
-        virtual Value* codegen();
 };
 
 class IdExprAST:public ExprAST{
@@ -87,7 +86,7 @@ class BinaryExprAST {
         char op;
         ExprAST* left;
         ExprAST* right;
-        BinaryExprAST(ExprAST* l, ExprAST* r);
+        BinaryExprAST(char op, ExprAST* l, ExprAST* r);
         virtual ~BinaryExprAST();
         virtual Value* codegen(BlockAST* block);
 };
@@ -110,10 +109,19 @@ class ReturnStmtAST: public StmtAST {
         virtual void codegen(BlockAST* block);
 };
 
+class VarStmtAST: public StmtAST {
+    public:
+        ExprAST* var;
+        VarStmtAST(ExprAST* e);
+        ~VarStmtAST();
+        virtual void codegen(BlockAST* block);
+};
+
 class BlockAST {
     public:
         std::vector<StmtAST*> stmts;
         std::map<std::string, Value*> locals;
+        BasicBlock* block;
         BlockAST();
         ~BlockAST();
         virtual void codegen();
@@ -138,14 +146,16 @@ class FuncTypeAST {
         FunctionType* codegen();
 };
 
-class FuncAST {
+class FuncAST: StmtAST {
     public:
         std::string name;
         FuncTypeAST* functype;
         BlockAST* body;
         FuncAST(std::string n);
         ~FuncAST();
-        Function* codegen();
+        //Function* codegen();
+        virtual void codegen(BlockAST* block);
+        void addbody(BlockAST* b);
 };
 
 class ProgramAST {
