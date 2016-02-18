@@ -112,8 +112,8 @@ class ReturnStmtAST: public StmtAST {
 
 class VarStmtAST: public StmtAST {
     public:
-        ExprAST* var;
-        VarStmtAST(ExprAST* e);
+        VarExprAST* value;
+        VarStmtAST(VarExprAST* v);
         ~VarStmtAST();
         virtual void codegen(BlockAST* block);
 };

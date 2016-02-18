@@ -81,7 +81,7 @@ stmt:
         $$ = new StmtAST($1);
     }
     |var ';' {
-        $$ = (StmtAST*)new VarStmtAST($1);
+        $$ = (StmtAST*)new VarStmtAST((VarExprAST*)$1);
     }
     |RETURN exp ';' {
         $$ = (StmtAST*)new ReturnStmtAST($2);
@@ -124,9 +124,6 @@ var:
         $$ = (ExprAST*)new VarExprAST($1, ((IdExprAST*)$2)->getName());
         printf("var define\n");
     }
-    |type identifier '=' exp {
-        printf("var define and assignmeng\n");
-    }
 ;
 
 exp:
@@ -141,6 +138,9 @@ exp:
     }
     | identifier {
         $$ = (ExprAST*)$1;
+    }
+    | var {
+        $$ = $1;
     }
 ;
 

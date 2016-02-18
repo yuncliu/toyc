@@ -63,6 +63,26 @@ VarExprAST::~VarExprAST() {
 }
 
 Value* VarExprAST::codegen(BlockAST* block) {
+    if (block->block != NULL) {
+        // allocate on stack
+        IRBuilder<> Builder(block->block);
+        //AllocaInst *varalloc = Builder.CreateAlloca(Builder.getInt32Ty());
+        AllocaInst *varalloc = Builder.CreateAlloca(this->type);
+        varalloc->setName(this->name);
+        block->locals.insert(std::pair<std::string, Value*>(varalloc->getName(), varalloc));
+        return varalloc;
+    }
+    else {
+        // global value
+        GlobalVariable* p = new GlobalVariable(*Single::getModule(), Type::getInt32Ty(getGlobalContext()),
+                false, Function::InternalLinkage, NULL);
+        p->setName(this->name);
+        // global value must be initialized
+        Constant* initer = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0, true);
+        p->setInitializer(initer);
+        Single::globalNamedValue.insert(std::pair<std::string, Value*>(p->getName(), p));
+        return p;
+    }
     return NULL;
 }
 
@@ -133,32 +153,14 @@ void ReturnStmtAST::codegen(BlockAST* block) {
 }
 
 //VarStmtAST
-VarStmtAST::VarStmtAST(ExprAST* e): var(e) {
+VarStmtAST::VarStmtAST(VarExprAST* v): value(v) {
 }
 
 VarStmtAST::~VarStmtAST() {
 }
 
 void VarStmtAST::codegen(BlockAST* block) {
-    if (block->block != NULL) {
-        // allocate on stack
-        IRBuilder<> Builder(block->block);
-        //AllocaInst *varalloc = Builder.CreateAlloca(Builder.getInt32Ty());
-        VarExprAST* vp = (VarExprAST*)var;
-        AllocaInst *varalloc = Builder.CreateAlloca(vp->type);
-        varalloc->setName(((VarExprAST*)var)->name);
-        block->locals.insert(std::pair<std::string, Value*>(varalloc->getName(), varalloc));
-    }
-    else {
-        // global value
-        GlobalVariable* p = new GlobalVariable(*Single::getModule(), Type::getInt32Ty(getGlobalContext()),
-                false, Function::InternalLinkage, NULL);
-        p->setName(((VarExprAST*)var)->name);
-        // global value must be initialized
-        Constant* initer = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0, true);
-        p->setInitializer(initer);
-        Single::globalNamedValue.insert(std::pair<std::string, Value*>(p->getName(), p));
-    }
+    value->codegen(block);
 }
 
 // BlockAST
