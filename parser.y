@@ -18,7 +18,7 @@ extern char* yytext;
     char   str[50];            /* symbol table index */
     ExprAST*     exprast;
     StmtAST*     stmtast;
-    BlockAST* BlockAST;
+    BlockAST*    blockast;
     FuncAST*     funast;
     FuncArgsAST*     funcargsast;
     VarExprAST*      varast;
@@ -43,8 +43,8 @@ extern char* yytext;
 %type <exprast> identifier
 %type <exprast> var
 %type <stmtast> stmt
-%type <BlockAST> stmt_list
-%type <BlockAST> block
+%type <blockast> stmt_list
+%type <blockast> block
 %type <funcargsast> function_args
 %%
 program:
