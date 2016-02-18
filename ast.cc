@@ -33,9 +33,9 @@ Value* IdExprAST::codegen(BlockAST* block) {
     }
     it = Single::globalNamedValue.find(name);
     if (it != Single::globalNamedValue.end()) {
-        printf("Can't find variable [%s]\n", name.c_str());
         return it->second;
     }
+    printf("Can't find variable [%s]\n", name.c_str());
     return NULL;
 }
 
@@ -51,8 +51,8 @@ Value* IntExprAST::codegen(BlockAST* block) {
 }
 
 //VarExprAST
-VarExprAST::VarExprAST(std::string t, std::string n)
-:type(t), name(n) {
+VarExprAST::VarExprAST(Type* ty, std::string n)
+:type(ty), name(n) {
 }
 
 VarExprAST::~VarExprAST() {
@@ -105,7 +105,6 @@ StmtAST::~StmtAST() {
 
 void StmtAST::codegen(BlockAST* block) {
     if (NULL != value) {
-        printf("hhhhhhhhhhhhhhhhhhhhhhhh\n");
         value->codegen(block);
     }
 }
@@ -180,12 +179,11 @@ FuncArgsAST::FuncArgsAST() {
 FuncArgsAST::~FuncArgsAST() {
 }
 
-void FuncArgsAST::addarg(std::string name, std::string type) {
+void FuncArgsAST::addarg(std::string name, Type* type) {
     names.push_back(name);
-    if (type == "int") {
-        args.push_back(Type::getInt32Ty(getGlobalContext()));
-    }
+    args.push_back(type);
 }
+
 std::vector<std::string> FuncArgsAST::getNames() {
     return names;
 }
@@ -194,7 +192,8 @@ std::vector<Type*> FuncArgsAST::getArgs() {
 }
 
 // FuncTypeAST
-FuncTypeAST::FuncTypeAST() {
+FuncTypeAST::FuncTypeAST(Type* rty, FuncArgsAST* args)
+    :returnty(rty), arg_list(args) {
 }
 
 FuncTypeAST::~FuncTypeAST(){
@@ -209,8 +208,8 @@ FunctionType* FuncTypeAST::codegen() {
 // FuncAST
 FuncAST::FuncAST(std::string n)
     :name(n) {
-        functype = new FuncTypeAST();
-    }
+    functype = NULL;
+}
 
 FuncAST::~FuncAST() {
 }

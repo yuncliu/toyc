@@ -20,8 +20,9 @@ extern char* yytext;
     StmtAST*     stmtast;
     BlockAST*    blockast;
     FuncAST*     funast;
-    FuncArgsAST*     funcargsast;
-    VarExprAST*      varast;
+    FuncArgsAST* funcargsast;
+    VarExprAST*  varast;
+    Type*        ty;
 }
 
 %token <dvalue> DOUBLE
@@ -39,7 +40,7 @@ extern char* yytext;
 %type <exprast> exp
 %type <funast> function
 %type <ast> program
-%type <str> type
+%type <ty> type
 %type <exprast> identifier
 %type <exprast> var
 %type <stmtast> stmt
@@ -49,7 +50,6 @@ extern char* yytext;
 %%
 program:
     stmt_list {
-        printf("proram: stmt_list\n");
         $1->codegen();
     }
 ;
@@ -92,9 +92,10 @@ stmt:
 function:
     type identifier '(' function_args ')' block {
         printf("get a function\n");
+        FuncTypeAST* fty = new FuncTypeAST($1, $4);
         $$ = new FuncAST(((IdExprAST*)$2)->name);
-        $$->functype->arg_list = $4;
-        $$->body = $6;
+        $$->functype = fty;
+        $$->addbody($6);
     }
 ;
 
@@ -107,12 +108,10 @@ function_args:
         $$ = new FuncArgsAST();
         VarExprAST* p = (VarExprAST*)$1;
         $$->addarg(p->name, p->type);
-        printf("one args\n");
     }
     |function_args ',' var {
         VarExprAST* p = (VarExprAST*)$3;
         $1->addarg(p->name, p->type);
-        printf("add one args\n");
     }
 ;
 
@@ -144,17 +143,15 @@ exp:
 identifier:
   ID {
         $$ = new IdExprAST(yytext);
-        printf("identifier %s\n", yytext);
   }
 ;
 
 type:
     DOUBLE_TYPE {
-        strcpy($$, "double");
+        $$ = Type::getDoubleTy(getGlobalContext());
     }
     |INTEGER_TYPE {
-        strcpy($$, "int");
-        printf("%s\n", "type int");
+        $$ = Type::getInt32Ty(getGlobalContext());
     }
 ;
 %%

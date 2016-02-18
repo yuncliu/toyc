@@ -13,7 +13,7 @@ EXEOBJS	= lex.o \
 LEX_CC		= lex.cc
 YACC_CC		= parser.cc
 
-EXE=a.out
+EXE=toyc
 TEST=t.out
 
 VPATH		 = ./

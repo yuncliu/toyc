@@ -74,9 +74,9 @@ class IntExprAST: ExprAST {
 
 class VarExprAST: ExprAST {
     public:
-        std::string type;
+        Type* type;
         std::string name;
-        VarExprAST(std::string t, std::string n);
+        VarExprAST(Type* ty, std::string n);
         ~VarExprAST();
         Value* codegen(BlockAST* block);
 };
@@ -134,15 +134,16 @@ class FuncArgsAST {
         std::vector<Type*>  args;
         FuncArgsAST();
         ~FuncArgsAST();
-        void addarg(std::string name, std::string type);
+        void addarg(std::string name, Type* type);
         std::vector<std::string> getNames();
         std::vector<Type*> getArgs();
 };
 
 class FuncTypeAST {
     public:
+        Type* returnty;
         FuncArgsAST* arg_list;
-        FuncTypeAST();
+        FuncTypeAST(Type* rty, FuncArgsAST* args);
         ~FuncTypeAST();
         FunctionType* codegen();
 };
