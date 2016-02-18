@@ -44,6 +44,7 @@ class Single {
         }
         return b;
     }
+    static std::map<std::string, Value*> globalNamedValue;
 };
 
 

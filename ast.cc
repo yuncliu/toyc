@@ -24,11 +24,17 @@ Value* IdExprAST::codegen(BlockAST* block) {
         Type* ty = it->second->getType();
         if (ty->isPointerTy()) {
             // this is pointer, allocated on stack, so used load
-            return Single::getBuilder()->CreateLoad(it->second);
+            return it->second;
+            //return Single::getBuilder()->CreateLoad(it->second);
         }
         else {
             return it->second;
         }
+    }
+    it = Single::globalNamedValue.find(name);
+    if (it != Single::globalNamedValue.end()) {
+        printf("Can't find variable [%s]\n", name.c_str());
+        return it->second;
     }
     return NULL;
 }
@@ -76,6 +82,9 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
         case '=':
             l = left->codegen(block);
             r = right->codegen(block);
+            if (r->getType()->isPointerTy()) {
+                r = Single::getBuilder()->CreateLoad(r);
+            }
             return Single::getBuilder()->CreateStore(r, l);
             break;
         default:
@@ -110,6 +119,13 @@ ReturnStmtAST::~ReturnStmtAST() {
 
 void ReturnStmtAST::codegen(BlockAST* block) {
     Value *retval = expr->codegen(block);
+    if (NULL == retval) {
+        printf("return stmt generate failed\n");
+        return;
+    }
+    if (retval->getType()->isPointerTy()) {
+        retval = Single::getBuilder()->CreateLoad(retval);
+    }
     Single::getBuilder()->CreateRet(retval);
 }
 
@@ -133,6 +149,10 @@ void VarStmtAST::codegen(BlockAST* block) {
         GlobalVariable* p = new GlobalVariable(*Single::getModule(), Type::getInt32Ty(getGlobalContext()),
                 false, Function::InternalLinkage, NULL);
         p->setName(((VarExprAST*)var)->name);
+        // global value must be initialized
+        Constant* initer = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0, true);
+        p->setInitializer(initer);
+        Single::globalNamedValue.insert(std::pair<std::string, Value*>(p->getName(), p));
     }
 }
 

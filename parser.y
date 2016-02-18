@@ -99,7 +99,11 @@ function:
 ;
 
 function_args:
-    var {
+     {
+        // for not args like  int foo()
+        $$ = new FuncArgsAST();
+    }
+    |var {
         $$ = new FuncArgsAST();
         VarExprAST* p = (VarExprAST*)$1;
         $$->addarg(p->name, p->type);
