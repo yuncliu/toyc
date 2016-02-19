@@ -79,9 +79,11 @@ class VarExprAST: ExprAST {
     public:
         Type* type;
         std::string name;
-        VarExprAST(Type* ty, std::string n);
+        IdExprAST* Id;
+        VarExprAST(Type* ty, IdExprAST* id);
         ~VarExprAST();
         Value* codegen(BlockAST* block);
+        std::string getName();
 };
 
 

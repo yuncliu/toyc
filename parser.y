@@ -13,9 +13,6 @@ extern char* yytext;
 %}
 
 %union {
-    double dvalue;              /* double value */
-    int    ivalue;              /* integer value */
-    char   str[50];            /* symbol table index */
     ExprAST*     exprast;
     StmtAST*     stmtast;
     BlockAST*    blockast;
@@ -26,11 +23,9 @@ extern char* yytext;
     Type*        ty;
 }
 
-%token <dvalue> DOUBLE
-%token <ivalue> INTEGER
-%token <str> ID
-%type <str> DEF
-%token DEF
+%token  DOUBLE
+%token  INTEGER
+%token  ID
 %token IF WHILE PRINT
 %token INTEGER_TYPE
 %token DOUBLE_TYPE
@@ -39,7 +34,6 @@ extern char* yytext;
 %left '*' '/'
 %right '^'
 %type <exprast> exp
-%type <ast> program
 %type <ty> type
 %type <exprast> identifier
 %type <exprast> var
@@ -121,7 +115,7 @@ function_args:
 
 var:
     type identifier {
-        $$ = (ExprAST*)new VarExprAST($1, ((IdExprAST*)$2)->getName());
+        $$ = (ExprAST*)new VarExprAST($1, (IdExprAST*)$2);
         printf("var define\n");
     }
 ;
@@ -143,6 +137,19 @@ exp:
         $$ = $1;
     }
 ;
+
+call_args:
+    {
+        $$ = new CallArgs();
+    }
+    | exp{
+        $$ = new CallArgs();
+        $$->pushArg($1)
+    }
+    | call_args ',' exp{
+        $$ = $1;
+        $$->pushArg($3)
+    }
 
 identifier:
   ID {

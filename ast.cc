@@ -55,8 +55,8 @@ Value* IntExprAST::codegen(BlockAST* block) {
 }
 
 //VarExprAST
-VarExprAST::VarExprAST(Type* ty, std::string n)
-:type(ty), name(n) {
+VarExprAST::VarExprAST(Type* ty, IdExprAST* id)
+:type(ty), Id(id) {
 }
 
 VarExprAST::~VarExprAST() {
@@ -84,6 +84,10 @@ Value* VarExprAST::codegen(BlockAST* block) {
         return p;
     }
     return NULL;
+}
+
+std::string VarExprAST::getName() {
+    return Id->getName();
 }
 
 // BinaryExprAST
