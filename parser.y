@@ -16,9 +16,10 @@ extern char* yytext;
     ExprAST*     exprast;
     StmtAST*     stmtast;
     BlockAST*    blockast;
-    FuncAST*     funast;
-    FuncProtoType* FuncProtoType;
+    FuncProtoType* funcprototype;
     FuncArgsAST* funcargsast;
+    FuncCallArgs* callargs;
+    FuncAST*     funast;
     VarExprAST*  varast;
     Type*        ty;
 }
@@ -40,9 +41,10 @@ extern char* yytext;
 %type <stmtast> stmt
 %type <blockast> stmt_list
 %type <blockast> block
-%type <funast> function
-%type <FuncProtoType> function_prototype
+%type <funcprototype> function_prototype
 %type <funcargsast> function_args
+%type <callargs> call_args
+%type <funast> function
 %%
 program:
     stmt_list {
@@ -104,12 +106,10 @@ function_args:
     }
     |var {
         $$ = new FuncArgsAST();
-        VarExprAST* p = (VarExprAST*)$1;
-        $$->addarg(p->name, p->type);
+        $$->addarg((VarExprAST*)$1);
     }
     |function_args ',' var {
-        VarExprAST* p = (VarExprAST*)$3;
-        $1->addarg(p->name, p->type);
+        $1->addarg((VarExprAST*)$3);
     }
 ;
 
@@ -136,21 +136,25 @@ exp:
     | var {
         $$ = $1;
     }
+    | identifier '(' call_args ')' {
+        printf("function call\n");
+        $$ = (ExprAST*)new FuncCallExpr((IdExprAST*)$1, $3);
+    }
 ;
 
 call_args:
-    {
-        $$ = new CallArgs();
+     {
+        $$ = new FuncCallArgs();
     }
-    | exp{
-        $$ = new CallArgs();
-        $$->pushArg($1)
+    | exp {
+        $$ = new FuncCallArgs();
+        $$->pushArg($1);
     }
     | call_args ',' exp{
         $$ = $1;
-        $$->pushArg($3)
+        $$->pushArg($3);
     }
-
+;
 identifier:
   ID {
         $$ = new IdExprAST(yytext);

@@ -23,6 +23,7 @@ class ReturnStmtAST;
 class BlockAST;
 class FuncArgsAST;
 class FuncProtoType;
+class FuncCallArgs;
 class FuncAST;
 
 class Single {
@@ -86,6 +87,14 @@ class VarExprAST: ExprAST {
         std::string getName();
 };
 
+class FuncCallExpr: ExprAST {
+    IdExprAST* Id;
+    FuncCallArgs* Args;
+    public:
+        FuncCallExpr(IdExprAST* id, FuncCallArgs* args);
+        ~FuncCallExpr();
+        Value* codegen(BlockAST* block);
+};
 
 class BinaryExprAST {
     public:
@@ -139,7 +148,8 @@ class FuncArgsAST {
         std::vector<Type*>  args;
         FuncArgsAST();
         ~FuncArgsAST();
-        void addarg(std::string name, Type* type);
+        //void addarg(std::string name, Type* type);
+        void addarg(VarExprAST* v);
         std::vector<std::string> getNames();
         std::vector<Type*> getArgs();
 };
@@ -153,6 +163,15 @@ class FuncProtoType {
         ~FuncProtoType();
         FunctionType* codegen();
         std::string getName();
+};
+
+class FuncCallArgs {
+    public:
+    std::vector<ExprAST*> Args;
+    FuncCallArgs();
+    ~FuncCallArgs();
+    void pushArg(ExprAST* arg);
+    std::vector<Value*> getArgs(BlockAST* block);
 };
 
 class FuncAST: StmtAST {

@@ -90,10 +90,29 @@ std::string VarExprAST::getName() {
     return Id->getName();
 }
 
+FuncCallExpr::FuncCallExpr(IdExprAST* id, FuncCallArgs* args)
+:Id(id), Args(args) {
+}
+
+FuncCallExpr::~FuncCallExpr() {
+}
+
+Value* FuncCallExpr::codegen(BlockAST* block) {
+    printf("function call codegen\n");
+    Function* func = Single::getModule()->getFunction(Id->getName().c_str());
+    if (NULL == func) {
+        printf("not such function: [%s]", Id->getName().c_str());
+        return NULL;
+    }
+    std::vector<Value*> args = this->Args->getArgs(block);
+    CallInst *call = CallInst::Create(func, makeArrayRef(args), "", block->block);
+    return call;
+}
+
 // BinaryExprAST
 BinaryExprAST::BinaryExprAST(char op, ExprAST* l, ExprAST* r)
-:op(op), left(l), right(r) {
-}
+    :op(op), left(l), right(r) {
+    }
 
 BinaryExprAST::~BinaryExprAST() {
 }
@@ -197,9 +216,9 @@ FuncArgsAST::FuncArgsAST() {
 FuncArgsAST::~FuncArgsAST() {
 }
 
-void FuncArgsAST::addarg(std::string name, Type* type) {
-    names.push_back(name);
-    args.push_back(type);
+void FuncArgsAST::addarg(VarExprAST* v) {
+    names.push_back(v->Id->getName());
+    args.push_back(v->type);
 }
 
 std::vector<std::string> FuncArgsAST::getNames() {
@@ -217,7 +236,7 @@ std::vector<Type*> FuncArgsAST::getArgs() {
  */
 FuncProtoType::FuncProtoType(IdExprAST* i, Type* rty, FuncArgsAST* args)
     :Id(i), ReturnTy(rty), Args(args) {
-}
+    }
 
 FuncProtoType::~FuncProtoType(){
 }
@@ -230,10 +249,30 @@ std::string FuncProtoType::getName() {
     return this->Id->getName();
 }
 
+// FuncCallArgs
+FuncCallArgs::FuncCallArgs() {
+}
+
+FuncCallArgs::~FuncCallArgs() {
+}
+
+void FuncCallArgs::pushArg(ExprAST* arg) {
+    this->Args.push_back(arg);
+}
+std::vector<Value*> FuncCallArgs::getArgs(BlockAST* block) {
+    std::vector<Value*> args;
+    std::vector<ExprAST*>::iterator it;
+    for (it = Args.begin(); it != Args.end(); ++it) {
+        args.push_back((**it).codegen(block));
+    }
+    return args;
+}
+
+
 // FuncAST
 FuncAST::FuncAST(FuncProtoType* f, BlockAST* b)
     :ProtoType(f), FuncBody(b){
-}
+    }
 
 FuncAST::~FuncAST() {
 }
@@ -251,6 +290,7 @@ void FuncAST::codegen(BlockAST* block) {
             ++AI, ++Idx) {
         AI->setName(ProtoType->Args->names[Idx]);
         FuncBody->locals.insert(std::pair<std::string, Value*>(ProtoType->Args->names[Idx], AI));
+        printf("insert variable [%s]\n", ProtoType->Args->names[Idx].c_str());
     }
     BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
     this->FuncBody->block = BB;
