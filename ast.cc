@@ -117,6 +117,12 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
         case '+':
             l = left->codegen(block);
             r = right->codegen(block);
+            if (l->getType()->isPointerTy()) {
+                l = Single::getBuilder()->CreateLoad(l);
+            }
+            if (r->getType()->isPointerTy()) {
+                r = Single::getBuilder()->CreateLoad(r);
+            }
             return Single::getBuilder()->CreateAdd(l, r);
             break;
         case '=':
