@@ -79,7 +79,6 @@ class IntExprAST: ExprAST {
 class VarExprAST: ExprAST {
     public:
         Type* type;
-        std::string name;
         IdExprAST* Id;
         VarExprAST(Type* ty, IdExprAST* id);
         ~VarExprAST();

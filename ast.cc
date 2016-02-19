@@ -25,15 +25,7 @@ std::string IdExprAST::getName() {
 Value* IdExprAST::codegen(BlockAST* block) {
     std::map<std::string, Value*>::iterator it = block->locals.find(name);
     if (it != block->locals.end()) {
-        Type* ty = it->second->getType();
-        if (ty->isPointerTy()) {
-            // this is pointer, allocated on stack, so used load
-            return it->second;
-            //return Single::getBuilder()->CreateLoad(it->second);
-        }
-        else {
-            return it->second;
-        }
+        return it->second;
     }
     it = Single::globalNamedValue.find(name);
     if (it != Single::globalNamedValue.end()) {
@@ -64,11 +56,12 @@ VarExprAST::~VarExprAST() {
 
 Value* VarExprAST::codegen(BlockAST* block) {
     if (block->block != NULL) {
+        printf("Variable code gen\n");
         // allocate on stack
         IRBuilder<> Builder(block->block);
         //AllocaInst *varalloc = Builder.CreateAlloca(Builder.getInt32Ty());
         AllocaInst *varalloc = Builder.CreateAlloca(this->type);
-        varalloc->setName(this->name);
+        varalloc->setName(this->getName());
         block->locals.insert(std::pair<std::string, Value*>(varalloc->getName(), varalloc));
         return varalloc;
     }
@@ -76,7 +69,7 @@ Value* VarExprAST::codegen(BlockAST* block) {
         // global value
         GlobalVariable* p = new GlobalVariable(*Single::getModule(), Type::getInt32Ty(getGlobalContext()),
                 false, Function::InternalLinkage, NULL);
-        p->setName(this->name);
+        p->setName(this->getName());
         // global value must be initialized
         Constant* initer = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0, true);
         p->setInitializer(initer);
@@ -263,7 +256,13 @@ std::vector<Value*> FuncCallArgs::getArgs(BlockAST* block) {
     std::vector<Value*> args;
     std::vector<ExprAST*>::iterator it;
     for (it = Args.begin(); it != Args.end(); ++it) {
-        args.push_back((**it).codegen(block));
+        Value* p = (**it).codegen(block);
+        if (p->getType()->isPointerTy()) {
+            Value* r = Single::getBuilder()->CreateLoad(p);
+            args.push_back(r);
+        }else {
+            args.push_back(p);
+        }
     }
     return args;
 }
@@ -284,17 +283,21 @@ void FuncAST::codegen(BlockAST* block) {
             this->getName(),
             Single::getModule());
     // Set names for all arguments.
+    BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
+    this->FuncBody->block = BB;
+    Single::getBuilder()->SetInsertPoint(BB);
+    IRBuilder<> Builder(BB);
+
     unsigned Idx = 0;
     for (Function::arg_iterator AI = F->arg_begin();
             Idx != ProtoType->Args->names.size();
             ++AI, ++Idx) {
         AI->setName(ProtoType->Args->names[Idx]);
-        FuncBody->locals.insert(std::pair<std::string, Value*>(ProtoType->Args->names[Idx], AI));
-        printf("insert variable [%s]\n", ProtoType->Args->names[Idx].c_str());
+        // My understand,  AI is in register, here store it to stack;
+        AllocaInst *stackvar = Builder.CreateAlloca(ProtoType->Args->args[Idx]);
+        Builder.CreateStore(AI, stackvar);
+        FuncBody->locals.insert(std::pair<std::string, Value*>(ProtoType->Args->names[Idx], stackvar));
     }
-    BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
-    this->FuncBody->block = BB;
-    Single::getBuilder()->SetInsertPoint(BB);
     if (NULL != this->FuncBody) {
         this->FuncBody->codegen();
     } else {
