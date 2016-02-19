@@ -69,21 +69,22 @@ class IdExprAST:public ExprAST{
 };
 
 class IntExprAST: ExprAST {
-    public:
         int value;
+    public:
         IntExprAST(int i);
         ~IntExprAST();
         Value* codegen(BlockAST* block);
 };
 
 class VarExprAST: ExprAST {
-    public:
         Type* type;
         IdExprAST* Id;
+    public:
         VarExprAST(Type* ty, IdExprAST* id);
         ~VarExprAST();
         Value* codegen(BlockAST* block);
         std::string getName();
+        Type* getType();
 };
 
 class FuncCallExpr: ExprAST {
@@ -96,19 +97,18 @@ class FuncCallExpr: ExprAST {
 };
 
 class BinaryExprAST {
-    public:
         char op;
         ExprAST* left;
         ExprAST* right;
+    public:
         BinaryExprAST(char op, ExprAST* l, ExprAST* r);
         virtual ~BinaryExprAST();
         virtual Value* codegen(BlockAST* block);
 };
 
-
 class StmtAST {
-    public:
         ExprAST* value;
+    public:
         StmtAST();
         StmtAST(ExprAST* e);
         ~StmtAST();
@@ -116,57 +116,66 @@ class StmtAST {
 };
 
 class ReturnStmtAST: public StmtAST {
-    public:
         ExprAST* expr;
+    public:
         ReturnStmtAST(ExprAST* e);
         ~ReturnStmtAST();
         virtual void codegen(BlockAST* block);
 };
 
 class VarStmtAST: public StmtAST {
-    public:
         VarExprAST* value;
+    public:
         VarStmtAST(VarExprAST* v);
         ~VarStmtAST();
         virtual void codegen(BlockAST* block);
 };
 
 class BlockAST {
-    public:
         std::vector<StmtAST*> stmts;
         std::map<std::string, Value*> locals;
+    public:
         BasicBlock* block;
         BlockAST();
         ~BlockAST();
         virtual void codegen();
+        void addLocalVariable(std::string n, Value* v);
+        Value* getLocalVariable(std::string n);
+        void addStatement(StmtAST* s);
 };
 
 class FuncArgsAST {
+        std::vector<std::string> Names;
+        std::vector<Type*>  Args;
     public:
-        std::vector<std::string> names;
-        std::vector<Type*>  args;
         FuncArgsAST();
         ~FuncArgsAST();
-        //void addarg(std::string name, Type* type);
-        void addarg(VarExprAST* v);
-        std::vector<std::string> getNames();
+        void addArg(VarExprAST* v);
+        std::vector<std::string> getArgNames();
+        size_t getArgSize();
         std::vector<Type*> getArgs();
+        Type* getArgType(size_t i);
+        std::string getArgName(size_t i);
 };
 
 class FuncProtoType {
-    public:
         IdExprAST* Id;
         Type* ReturnTy;
         FuncArgsAST* Args;
+    public:
         FuncProtoType(IdExprAST* i, Type* rty, FuncArgsAST* args);
         ~FuncProtoType();
-        FunctionType* codegen();
+        FunctionType* getFunctionType();
         std::string getName();
+        size_t getArgSize();
+        Type* getArgType(size_t i);
+        std::string getArgName(size_t i);
+        std::vector<Type*> getArgs();
 };
 
 class FuncCallArgs {
-    public:
     std::vector<ExprAST*> Args;
+    public:
     FuncCallArgs();
     ~FuncCallArgs();
     void pushArg(ExprAST* arg);
@@ -174,9 +183,9 @@ class FuncCallArgs {
 };
 
 class FuncAST: StmtAST {
-    public:
         FuncProtoType* ProtoType;
         BlockAST* FuncBody;
+    public:
         FuncAST(FuncProtoType* f, BlockAST* b);
         ~FuncAST();
         virtual void codegen(BlockAST* block);

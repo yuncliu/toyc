@@ -64,11 +64,11 @@ block:
 stmt_list:
     stmt {
         $$ = new BlockAST();
-        $$->stmts.push_back($1);
+        $$->addStatement($1);
     }
     |stmt_list stmt {
-        $1->stmts.push_back($2);
         $$ = $1;
+        $$->addStatement($2);
     }
 ;
 
@@ -106,10 +106,10 @@ function_args:
     }
     |var {
         $$ = new FuncArgsAST();
-        $$->addarg((VarExprAST*)$1);
+        $$->addArg((VarExprAST*)$1);
     }
     |function_args ',' var {
-        $1->addarg((VarExprAST*)$3);
+        $1->addArg((VarExprAST*)$3);
     }
 ;
 

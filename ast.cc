@@ -23,10 +23,12 @@ std::string IdExprAST::getName() {
 }
 
 Value* IdExprAST::codegen(BlockAST* block) {
-    std::map<std::string, Value*>::iterator it = block->locals.find(name);
-    if (it != block->locals.end()) {
-        return it->second;
+    //std::map<std::string, Value*>::iterator it = block->locals.find(name);
+    Value* v = block->getLocalVariable(name);
+    if (NULL != v) {
+        return v;
     }
+    std::map<std::string, Value*>::iterator it;
     it = Single::globalNamedValue.find(name);
     if (it != Single::globalNamedValue.end()) {
         return it->second;
@@ -56,14 +58,12 @@ VarExprAST::~VarExprAST() {
 
 Value* VarExprAST::codegen(BlockAST* block) {
     if (block->block != NULL) {
-        printf("Variable code gen\n");
         // allocate on stack
         IRBuilder<> Builder(block->block);
-        //AllocaInst *varalloc = Builder.CreateAlloca(Builder.getInt32Ty());
-        AllocaInst *varalloc = Builder.CreateAlloca(this->type);
-        varalloc->setName(this->getName());
-        block->locals.insert(std::pair<std::string, Value*>(varalloc->getName(), varalloc));
-        return varalloc;
+        AllocaInst* Var = Builder.CreateAlloca(this->type);
+        Var->setName(this->getName());
+        block->addLocalVariable(Var->getName(), Var);
+        return Var;
     }
     else {
         // global value
@@ -81,6 +81,10 @@ Value* VarExprAST::codegen(BlockAST* block) {
 
 std::string VarExprAST::getName() {
     return Id->getName();
+}
+
+Type* VarExprAST::getType() {
+    return type;
 }
 
 FuncCallExpr::FuncCallExpr(IdExprAST* id, FuncCallArgs* args)
@@ -208,6 +212,22 @@ void BlockAST::codegen() {
     }
 }
 
+void BlockAST::addLocalVariable(std::string n, Value* v) {
+    this->locals.insert(std::pair<std::string, Value*>(n, v));
+}
+Value* BlockAST::getLocalVariable(std::string n) {
+    std::map<std::string, Value*>::iterator it;
+    it = this->locals.find(n);
+    if (it != this->locals.end()) {
+        return it->second;
+    }
+    return NULL;
+}
+
+void BlockAST::addStatement(StmtAST* s) {
+    this->stmts.push_back(s);
+}
+
 // FuncArgsAST
 FuncArgsAST::FuncArgsAST() {
 }
@@ -215,16 +235,34 @@ FuncArgsAST::FuncArgsAST() {
 FuncArgsAST::~FuncArgsAST() {
 }
 
-void FuncArgsAST::addarg(VarExprAST* v) {
-    names.push_back(v->Id->getName());
-    args.push_back(v->type);
+void FuncArgsAST::addArg(VarExprAST* v) {
+    Names.push_back(v->getName());
+    Args.push_back(v->getType());
 }
 
-std::vector<std::string> FuncArgsAST::getNames() {
-    return names;
+std::vector<std::string> FuncArgsAST::getArgNames() {
+    return Names;
 }
+
+size_t FuncArgsAST::getArgSize() {
+    return Names.size();
+}
+
 std::vector<Type*> FuncArgsAST::getArgs() {
-    return args;
+    return Args;
+}
+Type* FuncArgsAST::getArgType(size_t i) {
+    if (i >= Args.size()) {
+        return NULL;
+    }
+    return Args[i];
+}
+
+std::string FuncArgsAST::getArgName(size_t i) {
+    if (i >= Names.size()) {
+        return NULL;
+    }
+    return Names[i];
 }
 
 /**
@@ -240,12 +278,28 @@ FuncProtoType::FuncProtoType(IdExprAST* i, Type* rty, FuncArgsAST* args)
 FuncProtoType::~FuncProtoType(){
 }
 
-FunctionType* FuncProtoType::codegen() {
+FunctionType* FuncProtoType::getFunctionType() {
     return FunctionType::get(this->ReturnTy, this->Args->getArgs(), false);
 }
 
 std::string FuncProtoType::getName() {
     return this->Id->getName();
+}
+
+size_t FuncProtoType::getArgSize() {
+    return this->Args->getArgSize();
+}
+
+Type* FuncProtoType::getArgType(size_t i) {
+    return Args->getArgType(i);
+}
+
+std::string FuncProtoType::getArgName(size_t i) {
+    return Args->getArgName(i);
+}
+
+std::vector<Type*> FuncProtoType::getArgs() {
+    return this->Args->getArgs();
 }
 
 // FuncCallArgs
@@ -284,7 +338,7 @@ FuncAST::~FuncAST() {
 
 //Function* FuncAST::codegen() {
 void FuncAST::codegen(BlockAST* block) {
-    Function* F = Function::Create(this->ProtoType->codegen(),
+    Function* F = Function::Create(this->ProtoType->getFunctionType(),
             Function::ExternalLinkage,
             this->getName(),
             Single::getModule());
@@ -294,15 +348,16 @@ void FuncAST::codegen(BlockAST* block) {
     Single::getBuilder()->SetInsertPoint(BB);
     IRBuilder<> Builder(BB);
 
-    unsigned Idx = 0;
-    for (Function::arg_iterator AI = F->arg_begin();
-            Idx != ProtoType->Args->names.size();
-            ++AI, ++Idx) {
-        AI->setName(ProtoType->Args->names[Idx]);
+    unsigned i = 0;
+    Function::arg_iterator it;
+    for (it = F->arg_begin(); i != ProtoType->getArgSize(); ++it, ++i) {
+        it->setName(ProtoType->getArgName(i));
         // My understand,  AI is in register, here store it to stack;
-        AllocaInst *stackvar = Builder.CreateAlloca(ProtoType->Args->args[Idx]);
-        Builder.CreateStore(AI, stackvar);
-        FuncBody->locals.insert(std::pair<std::string, Value*>(ProtoType->Args->names[Idx], stackvar));
+        //AllocaInst *stackvar = Builder.CreateAlloca(ProtoType->Args->args[i]);
+        AllocaInst *stackvar = Builder.CreateAlloca(ProtoType->getArgType(i));
+        Builder.CreateStore(it, stackvar);
+        //FuncBody->locals.insert(std::pair<std::string, Value*>(ProtoType->getArgName(i), stackvar));
+        FuncBody->addLocalVariable(ProtoType->getArgName(i), stackvar);
     }
     if (NULL != this->FuncBody) {
         this->FuncBody->codegen();
