@@ -166,6 +166,7 @@ class FuncProtoType {
         FuncProtoType(IdExprAST* i, Type* rty, FuncArgsAST* args);
         ~FuncProtoType();
         FunctionType* getFunctionType();
+        Function* codegen();
         std::string getName();
         size_t getArgSize();
         Type* getArgType(size_t i);

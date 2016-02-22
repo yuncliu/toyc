@@ -282,6 +282,20 @@ FunctionType* FuncProtoType::getFunctionType() {
     return FunctionType::get(this->ReturnTy, this->Args->getArgs(), false);
 }
 
+Function* FuncProtoType::codegen() {
+    Function* F = Function::Create(this->getFunctionType(),
+            Function::ExternalLinkage,
+            this->getName(),
+            Single::getModule());
+
+    unsigned i = 0;
+    Function::arg_iterator it;
+    for (it = F->arg_begin(); i != this->getArgSize(); ++it, ++i) {
+        it->setName(this->getArgName(i));
+    }
+    return F;
+}
+
 std::string FuncProtoType::getName() {
     return this->Id->getName();
 }
@@ -338,11 +352,8 @@ FuncAST::~FuncAST() {
 
 //Function* FuncAST::codegen() {
 void FuncAST::codegen(BlockAST* block) {
-    Function* F = Function::Create(this->ProtoType->getFunctionType(),
-            Function::ExternalLinkage,
-            this->getName(),
-            Single::getModule());
     // Set names for all arguments.
+    Function* F = ProtoType->codegen();
     BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
     this->FuncBody->block = BB;
     Single::getBuilder()->SetInsertPoint(BB);
@@ -351,13 +362,11 @@ void FuncAST::codegen(BlockAST* block) {
     unsigned i = 0;
     Function::arg_iterator it;
     for (it = F->arg_begin(); i != ProtoType->getArgSize(); ++it, ++i) {
-        it->setName(ProtoType->getArgName(i));
         // My understand,  AI is in register, here store it to stack;
         //AllocaInst *stackvar = Builder.CreateAlloca(ProtoType->Args->args[i]);
-        AllocaInst *stackvar = Builder.CreateAlloca(ProtoType->getArgType(i));
-        Builder.CreateStore(it, stackvar);
-        //FuncBody->locals.insert(std::pair<std::string, Value*>(ProtoType->getArgName(i), stackvar));
-        FuncBody->addLocalVariable(ProtoType->getArgName(i), stackvar);
+        AllocaInst *StackVar = Builder.CreateAlloca(ProtoType->getArgType(i));
+        Builder.CreateStore(it, StackVar);
+        FuncBody->addLocalVariable(ProtoType->getArgName(i), StackVar);
     }
     if (NULL != this->FuncBody) {
         this->FuncBody->codegen();
