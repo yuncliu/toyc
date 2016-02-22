@@ -221,11 +221,17 @@ Value* BlockAST::getLocalVariable(std::string n) {
     if (it != this->locals.end()) {
         return it->second;
     }
-    return NULL;
+    if (NULL == Parent) {
+        return NULL;
+    }
+    return Parent->getLocalVariable(n);
 }
 
 void BlockAST::addStatement(StmtAST* s) {
     this->stmts.push_back(s);
+}
+void BlockAST::setParent(BlockAST* p) {
+    this->Parent = p;
 }
 
 // FuncArgsAST
@@ -377,4 +383,32 @@ void FuncAST::codegen(BlockAST* block) {
 
 std::string FuncAST::getName() {
     return ProtoType->getName();
+}
+
+IfStmtAST::IfStmtAST(ExprAST* Cond, BlockAST* block)
+    :Cond(Cond),Body(block) {
+}
+IfStmtAST::~IfStmtAST() {
+}
+
+void IfStmtAST::codegen(BlockAST* block) {
+    printf("If statement code genration\n");
+    Value* CondV = Cond->codegen(block);
+    if (NULL == CondV) {
+        return;
+    }
+    Value *Zero = ConstantInt::get(getGlobalContext(), APInt(32, 0));
+    CondV = Single::getBuilder()->CreateICmpNE(CondV, Zero);
+    Function *TheFunction = Single::getBuilder()->GetInsertBlock()->getParent();
+    BasicBlock *ThenBB = BasicBlock::Create(getGlobalContext(), "then", TheFunction);
+    BasicBlock *ElseBB = BasicBlock::Create(getGlobalContext(), "else", TheFunction);
+    Single::getBuilder()->CreateCondBr(CondV, ThenBB, ElseBB);
+    Single::getBuilder()->SetInsertPoint(ThenBB);
+    Body->setParent(block);
+    Body->codegen();
+    ThenBB = Single::getBuilder()->GetInsertBlock();
+
+    Single::getBuilder()->CreateBr(ElseBB);
+    Single::getBuilder()->SetInsertPoint(ElseBB);
+    ElseBB = Single::getBuilder()->GetInsertBlock();
 }

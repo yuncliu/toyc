@@ -134,6 +134,7 @@ class VarStmtAST: public StmtAST {
 class BlockAST {
         std::vector<StmtAST*> stmts;
         std::map<std::string, Value*> locals;
+        BlockAST* Parent;
     public:
         BasicBlock* block;
         BlockAST();
@@ -142,6 +143,7 @@ class BlockAST {
         void addLocalVariable(std::string n, Value* v);
         Value* getLocalVariable(std::string n);
         void addStatement(StmtAST* s);
+        void setParent(BlockAST* p);
 };
 
 class FuncArgsAST {
@@ -191,6 +193,15 @@ class FuncAST: StmtAST {
         ~FuncAST();
         virtual void codegen(BlockAST* block);
         std::string getName();
+};
+
+class IfStmtAST: StmtAST {
+    ExprAST* Cond;
+    BlockAST* Body;
+    public:
+    IfStmtAST(ExprAST* Cond, BlockAST* block);
+    ~IfStmtAST();
+    virtual void codegen(BlockAST* block);
 };
 
 class ProgramAST {

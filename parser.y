@@ -85,6 +85,9 @@ stmt:
     |function {
         $$ = (StmtAST*)$1;
     }
+    | IF '('exp ')' block {
+        $$ = (StmtAST*)new IfStmtAST($3, $5);
+    }
 ;
 
 function:
