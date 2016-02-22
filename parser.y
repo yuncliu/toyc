@@ -130,6 +130,9 @@ exp:
     | exp '+' exp {
         $$ = (ExprAST*)new BinaryExprAST('+', $1, $3);
     }
+    | exp '-' exp {
+        $$ = (ExprAST*)new BinaryExprAST('-', $1, $3);
+    }
     | exp '=' exp {
         $$ = (ExprAST*)new BinaryExprAST('=', $1, $3);
     }

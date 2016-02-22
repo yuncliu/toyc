@@ -129,6 +129,17 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
             }
             return Single::getBuilder()->CreateAdd(l, r);
             break;
+        case '-':
+            l = left->codegen(block);
+            r = right->codegen(block);
+            if (l->getType()->isPointerTy()) {
+                l = Single::getBuilder()->CreateLoad(l);
+            }
+            if (r->getType()->isPointerTy()) {
+                r = Single::getBuilder()->CreateLoad(r);
+            }
+            return Single::getBuilder()->CreateSub(l, r);
+            break;
         case '=':
             l = left->codegen(block);
             r = right->codegen(block);
@@ -398,6 +409,9 @@ void IfStmtAST::codegen(BlockAST* block) {
         return;
     }
     Value *Zero = ConstantInt::get(getGlobalContext(), APInt(32, 0));
+    if (CondV->getType()->isPointerTy()) {
+        CondV = Single::getBuilder()->CreateLoad(CondV);
+    }
     CondV = Single::getBuilder()->CreateICmpNE(CondV, Zero);
     Function *TheFunction = Single::getBuilder()->GetInsertBlock()->getParent();
     BasicBlock *ThenBB = BasicBlock::Create(getGlobalContext(), "then", TheFunction);
