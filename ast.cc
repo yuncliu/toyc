@@ -404,8 +404,8 @@ std::string FuncAST::getName() {
     return ProtoType->getName();
 }
 
-IfStmtAST::IfStmtAST(ExprAST* Cond, BlockAST* block)
-    :Cond(Cond),Body(block) {
+IfStmtAST::IfStmtAST(ExprAST* Cond, BlockAST* Then, BlockAST* Else)
+    :Cond(Cond),Then(Then), Else(Else) {
 }
 IfStmtAST::~IfStmtAST() {
 }
@@ -425,11 +425,15 @@ void IfStmtAST::codegen(BlockAST* block) {
     BasicBlock *ElseBB = BasicBlock::Create(getGlobalContext(), "else", TheFunction);
     Single::getBuilder()->CreateCondBr(CondV, ThenBB, ElseBB);
     Single::getBuilder()->SetInsertPoint(ThenBB);
-    Body->setParent(block);
-    Body->codegen();
+    Then->setParent(block);
+    Then->codegen();
     ThenBB = Single::getBuilder()->GetInsertBlock();
 
     Single::getBuilder()->CreateBr(ElseBB);
     Single::getBuilder()->SetInsertPoint(ElseBB);
+    if (NULL != Else) {
+        Else->setParent(block);
+        Else->codegen();
+    }
     ElseBB = Single::getBuilder()->GetInsertBlock();
 }

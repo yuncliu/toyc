@@ -29,6 +29,10 @@
     return IF;
 }
 
+"else" {
+    return ELSE;
+}
+
 "while" {
     return WHILE;
 }

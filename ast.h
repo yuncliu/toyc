@@ -204,9 +204,10 @@ class FuncAST: StmtAST {
 
 class IfStmtAST: StmtAST {
     ExprAST* Cond;
-    BlockAST* Body;
+    BlockAST* Then;
+    BlockAST* Else;
     public:
-    IfStmtAST(ExprAST* Cond, BlockAST* block);
+    IfStmtAST(ExprAST* Cond, BlockAST* Then, BlockAST* Else);
     ~IfStmtAST();
     virtual void codegen(BlockAST* block);
 };

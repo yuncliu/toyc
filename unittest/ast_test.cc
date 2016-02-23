@@ -93,3 +93,29 @@ TEST(main, return_function) {
     delete EE;
     Single::ReSet();
 }
+
+TEST(main, if_else) {
+    Single::ReSet();
+    Single::getModule();
+    Single::getBuilder();
+
+    yy_scan_string("\
+int main() {\
+    if (0) {\
+        return 0;\
+    }else {\
+        return 1;\
+    }\
+}");
+
+    yyparse();
+    Single::getModule()->dump();
+    ExecutionEngine* EE = EngineBuilder(std::unique_ptr<Module>(Single::getModule())).create();
+    Function* Func = Single::getModule()->getFunction("main");
+    std::vector<GenericValue> noargs;
+    GenericValue gv = EE->runFunction(Func, noargs);
+    printf("Return value is [%ld]\n", *(gv.IntVal.getRawData()));
+    EXPECT_EQ(*(gv.IntVal.getRawData()), 1);
+    delete EE;
+    Single::ReSet();
+}

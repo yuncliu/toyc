@@ -27,7 +27,7 @@ extern char* yytext;
 %token  DOUBLE
 %token  INTEGER
 %token  ID
-%token IF WHILE PRINT
+%token IF ELSE WHILE PRINT
 %token INTEGER_TYPE
 %token DOUBLE_TYPE
 %token RETURN
@@ -85,8 +85,11 @@ stmt:
     |function {
         $$ = (StmtAST*)$1;
     }
-    | IF '('exp ')' block {
-        $$ = (StmtAST*)new IfStmtAST($3, $5);
+    | IF '(' exp ')' block {
+        $$ = (StmtAST*)new IfStmtAST($3, $5, NULL);
+    }
+    | IF '(' exp ')' block ELSE block {
+        $$ = (StmtAST*)new IfStmtAST($3, $5, $7);
     }
 ;
 
