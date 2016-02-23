@@ -83,6 +83,14 @@ class IntExprAST: ExprAST {
         Value* codegen(BlockAST* block);
 };
 
+class DoubleExprAST: ExprAST {
+        double value;
+    public:
+        DoubleExprAST(double d);
+        ~DoubleExprAST();
+        Value* codegen(BlockAST* block);
+};
+
 class VarExprAST: ExprAST {
         Type* type;
         IdExprAST* Id;

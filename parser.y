@@ -130,11 +130,20 @@ exp:
     INTEGER {
         $$ = (ExprAST*)new IntExprAST(atoi(yytext));
     }
+    |DOUBLE {
+        $$ = (ExprAST*)new DoubleExprAST(atof(yytext));
+    }
     | exp '+' exp {
         $$ = (ExprAST*)new BinaryExprAST('+', $1, $3);
     }
     | exp '-' exp {
         $$ = (ExprAST*)new BinaryExprAST('-', $1, $3);
+    }
+    | exp '*' exp {
+        $$ = (ExprAST*)new BinaryExprAST('*', $1, $3);
+    }
+    | exp '/' exp {
+        $$ = (ExprAST*)new BinaryExprAST('/', $1, $3);
     }
     | exp '=' exp {
         $$ = (ExprAST*)new BinaryExprAST('=', $1, $3);

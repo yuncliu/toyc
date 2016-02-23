@@ -49,6 +49,10 @@
     return INTEGER;
 }
 
+[0-9]+\.[0-9]* {
+    return DOUBLE;
+}
+
 [-+*/^()={},] {
     return *yytext;
 }

@@ -56,6 +56,17 @@ Value* IntExprAST::codegen(BlockAST* block) {
     return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), value, true);
 }
 
+DoubleExprAST::DoubleExprAST(double d)
+    :value(d) {
+}
+
+DoubleExprAST::~DoubleExprAST() {
+}
+
+Value* DoubleExprAST::codegen(BlockAST* block) {
+    return ConstantFP::get(Type::getDoubleTy(getGlobalContext()), value);
+}
+
 //VarExprAST
 VarExprAST::VarExprAST(Type* ty, IdExprAST* id)
 :type(ty), Id(id) {
@@ -134,7 +145,12 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
             if (IsAllocaInst(r)) {
                 r = Single::getBuilder()->CreateLoad(r);
             }
-            return Single::getBuilder()->CreateAdd(l, r);
+            if (l->getType()->isIntegerTy() && r->getType()->isIntegerTy()) {
+                return Single::getBuilder()->CreateAdd(l, r);
+            }
+            else {
+                return Single::getBuilder()->CreateFAdd(l, r);
+            }
             break;
         case '-':
             l = left->codegen(block);
@@ -145,7 +161,41 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
             if (IsAllocaInst(r)) {
                 r = Single::getBuilder()->CreateLoad(r);
             }
-            return Single::getBuilder()->CreateSub(l, r);
+            if (l->getType()->isIntegerTy() && r->getType()->isIntegerTy()) {
+                return Single::getBuilder()->CreateSub(l, r);
+            } else {
+                return Single::getBuilder()->CreateFSub(l, r);
+            }
+            break;
+        case '*':
+            l = left->codegen(block);
+            r = right->codegen(block);
+            if (IsAllocaInst(l)) {
+                l = Single::getBuilder()->CreateLoad(l);
+            }
+            if (IsAllocaInst(r)) {
+                r = Single::getBuilder()->CreateLoad(r);
+            }
+            if (l->getType()->isIntegerTy() && r->getType()->isIntegerTy()) {
+                return Single::getBuilder()->CreateMul(l, r);
+            } else {
+                return Single::getBuilder()->CreateFMul(l, r);
+            }
+            break;
+        case '/':
+            l = left->codegen(block);
+            r = right->codegen(block);
+            if (IsAllocaInst(l)) {
+                l = Single::getBuilder()->CreateLoad(l);
+            }
+            if (IsAllocaInst(r)) {
+                r = Single::getBuilder()->CreateLoad(r);
+            }
+            if (l->getType()->isIntegerTy() && r->getType()->isIntegerTy()) {
+                return Single::getBuilder()->CreateSDiv(l, r);
+            } else {
+                return Single::getBuilder()->CreateFDiv(l, r);
+            }
             break;
         case '=':
             l = left->codegen(block);
@@ -156,6 +206,12 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
             if (IsGlobalVariable(l)) {
                 printf("get a global valriable\n");
                 ((GlobalVariable*)l)->setInitializer((Constant*)r);
+            }
+            printf("%d = %d\n", l->getValueID(), r->getValueID());
+            if (r->getType()->isDoubleTy()) {
+                printf("convert\n");
+                r = Single::getBuilder()->CreateFPToSI(r, Type::getInt32Ty(getGlobalContext()));
+                printf("converted\n");
             }
             return Single::getBuilder()->CreateStore(r, l);
             break;
