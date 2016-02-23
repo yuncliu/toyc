@@ -26,7 +26,7 @@ LIB=-L. \
 	-L../googletest/build/googlemock/gtest
 
 
-all:clean $(TEST)
+all: $(TEST)
 
 
 $(TEST):$(CCOBJS)

@@ -1,5 +1,13 @@
 #include "ast.h"
 
+bool IsAllocaInst(Value* v) {
+    return v->getValueID() == Value::InstructionVal + Instruction::Alloca;
+}
+
+bool IsGlobalVariable(Value* v) {
+    return v->getValueID() == Value::GlobalVariableVal;
+}
+
 // ExprAST
 ExprAST::ExprAST() {
 }
@@ -95,7 +103,6 @@ FuncCallExpr::~FuncCallExpr() {
 }
 
 Value* FuncCallExpr::codegen(BlockAST* block) {
-    printf("function call codegen\n");
     Function* func = Single::getModule()->getFunction(Id->getName().c_str());
     if (NULL == func) {
         printf("not such function: [%s]", Id->getName().c_str());
@@ -121,10 +128,10 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
         case '+':
             l = left->codegen(block);
             r = right->codegen(block);
-            if (l->getType()->isPointerTy()) {
+            if (IsAllocaInst(l)) {
                 l = Single::getBuilder()->CreateLoad(l);
             }
-            if (r->getType()->isPointerTy()) {
+            if (IsAllocaInst(r)) {
                 r = Single::getBuilder()->CreateLoad(r);
             }
             return Single::getBuilder()->CreateAdd(l, r);
@@ -132,10 +139,10 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
         case '-':
             l = left->codegen(block);
             r = right->codegen(block);
-            if (l->getType()->isPointerTy()) {
+            if (IsAllocaInst(l)) {
                 l = Single::getBuilder()->CreateLoad(l);
             }
-            if (r->getType()->isPointerTy()) {
+            if (IsAllocaInst(r)) {
                 r = Single::getBuilder()->CreateLoad(r);
             }
             return Single::getBuilder()->CreateSub(l, r);
@@ -143,10 +150,11 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
         case '=':
             l = left->codegen(block);
             r = right->codegen(block);
-            if (r->getType()->isPointerTy()) {
+            if (IsAllocaInst(r)) {
                 r = Single::getBuilder()->CreateLoad(r);
             }
-            if (Single::IsGlobal(l->getName().data())) {
+            if (IsGlobalVariable(l)) {
+                printf("get a global valriable\n");
                 ((GlobalVariable*)l)->setInitializer((Constant*)r);
             }
             return Single::getBuilder()->CreateStore(r, l);
@@ -186,7 +194,8 @@ void ReturnStmtAST::codegen(BlockAST* block) {
         printf("return stmt generate failed\n");
         return;
     }
-    if (retval->getType()->isPointerTy()) {
+    // stack object and global object need to load into register
+    if (IsAllocaInst(retval) | IsGlobalVariable(retval)) {
         retval = Single::getBuilder()->CreateLoad(retval);
     }
     Single::getBuilder()->CreateRet(retval);
@@ -201,12 +210,11 @@ VarStmtAST::~VarStmtAST() {
 
 void VarStmtAST::codegen(BlockAST* block) {
     Value* p = value->codegen(block);
-    printf("fuck global varable\n");
     p->getType()->dump();
 }
 
 // BlockAST
-BlockAST::BlockAST():block(NULL) {
+BlockAST::BlockAST():Parent(NULL), block(NULL) {
 }
 
 BlockAST::~BlockAST() {
@@ -348,7 +356,7 @@ std::vector<Value*> FuncCallArgs::getArgs(BlockAST* block) {
     std::vector<ExprAST*>::iterator it;
     for (it = Args.begin(); it != Args.end(); ++it) {
         Value* p = (**it).codegen(block);
-        if (p->getType()->isPointerTy()) {
+        if (IsAllocaInst(p)) {
             Value* r = Single::getBuilder()->CreateLoad(p);
             args.push_back(r);
         }else {
@@ -403,13 +411,12 @@ IfStmtAST::~IfStmtAST() {
 }
 
 void IfStmtAST::codegen(BlockAST* block) {
-    printf("If statement code genration\n");
     Value* CondV = Cond->codegen(block);
     if (NULL == CondV) {
         return;
     }
     Value *Zero = ConstantInt::get(getGlobalContext(), APInt(32, 0));
-    if (CondV->getType()->isPointerTy()) {
+    if (IsAllocaInst(CondV)) {
         CondV = Single::getBuilder()->CreateLoad(CondV);
     }
     CondV = Single::getBuilder()->CreateICmpNE(CondV, Zero);

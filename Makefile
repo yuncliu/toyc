@@ -24,9 +24,9 @@ INC=-I.\
 LIB=-L.
 
 
-all:clean $(YACC_CC) $(LEX_CC) $(EXE)
+all: $(YACC_CC) $(LEX_CC) $(EXE)
 
-test: clean $(YACC_CC) $(LEX_CC)
+test: $(YACC_CC) $(LEX_CC)
 	cd unittest;make
 
 gtest:

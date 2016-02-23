@@ -55,6 +55,9 @@ class Single {
     }
 };
 
+bool IsAllocaInst(Value* v);
+bool IsGlobalVariable(Value* v);
+
 
 class ExprAST {
     public:
