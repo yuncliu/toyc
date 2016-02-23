@@ -45,6 +45,10 @@ class Single {
         }
         return b;
     }
+    static void ReSet() {
+        m = NULL;
+        b = NULL;
+    }
     static std::map<std::string, Value*> globalNamedValue;
     static bool IsGlobal(std::string name) {
         return Single::globalNamedValue.find(name) != Single::globalNamedValue.end();

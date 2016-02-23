@@ -2,8 +2,8 @@ CPP=${CXX}
 LEX=flex
 YACC=bison
 CC=${CC}
-CFLAGS=-Wall -std=c++11 -g -DDEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
-LINKS	=  -lstdc++ -lm `llvm-config --ldflags --libs --system-libs --libs core`
+CFLAGS=-Wall -std=c++11 -g -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
+LINKS	=  -lstdc++ -lm `llvm-config --ldflags --libs --system-libs --libs`
 
 EXEOBJS	= lex.o \
 			parser.o \
