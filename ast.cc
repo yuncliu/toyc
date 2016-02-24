@@ -64,7 +64,8 @@ DoubleExprAST::~DoubleExprAST() {
 }
 
 Value* DoubleExprAST::codegen(BlockAST* block) {
-    return ConstantFP::get(Type::getDoubleTy(getGlobalContext()), value);
+    printf("double code gen [%f]\n", value);
+    return ConstantFP::get(getGlobalContext(), APFloat(value));
 }
 
 //VarExprAST
@@ -206,12 +207,19 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
             if (IsGlobalVariable(l)) {
                 printf("get a global valriable\n");
                 ((GlobalVariable*)l)->setInitializer((Constant*)r);
+                return Single::getBuilder()->CreateStore(r, l);
             }
-            printf("%d = %d\n", l->getValueID(), r->getValueID());
-            if (r->getType()->isDoubleTy()) {
-                printf("convert\n");
-                r = Single::getBuilder()->CreateFPToSI(r, Type::getInt32Ty(getGlobalContext()));
-                printf("converted\n");
+
+            if (((AllocaInst*)l)->getAllocatedType()->getTypeID() == r->getType()->getTypeID()) {
+                return Single::getBuilder()->CreateStore(r, l);
+            }
+            if (((AllocaInst*)l)->getAllocatedType()->isIntegerTy()
+                    && (r->getType()->isDoubleTy() || r->getType()->isFloatTy())) {
+               r = Single::getBuilder()->CreateFPToSI(r, ((AllocaInst*)l)->getAllocatedType());
+            }
+            if (((AllocaInst*)l)->getAllocatedType()->isDoubleTy()
+                && r->getType()->isIntegerTy()) {
+               r = Single::getBuilder()->CreateSIToFP(r, ((AllocaInst*)l)->getAllocatedType());
             }
             return Single::getBuilder()->CreateStore(r, l);
             break;
@@ -462,7 +470,7 @@ std::string FuncAST::getName() {
 
 IfStmtAST::IfStmtAST(ExprAST* Cond, BlockAST* Then, BlockAST* Else)
     :Cond(Cond),Then(Then), Else(Else) {
-}
+    }
 IfStmtAST::~IfStmtAST() {
 }
 

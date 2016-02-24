@@ -95,3 +95,28 @@ TEST_F(ASTTest, if_else) {
     Single::getModule()->dump();
     EXPECT_EQ(this->exe(), 1);
 }
+
+TEST_F(ASTTest, double2int) {
+    yy_scan_string("\
+            int main() {\
+                double a = 10.8;\
+                int b = a;\
+                return b;\
+            }");
+            yyparse();
+            Single::getModule()->dump();
+            EXPECT_EQ(this->exe(), 10);
+}
+
+TEST_F(ASTTest, int2double) {
+    yy_scan_string("\
+            int main() {\
+                int a = 10;\
+                double b = a;\
+                int c = a;\
+                return c;\
+            }");
+            yyparse();
+            Single::getModule()->dump();
+            EXPECT_EQ(this->exe(), 10);
+}

@@ -131,6 +131,7 @@ exp:
         $$ = (ExprAST*)new IntExprAST(atoi(yytext));
     }
     |DOUBLE {
+        printf("new double [%f]\n", atof(yytext));
         $$ = (ExprAST*)new DoubleExprAST(atof(yytext));
     }
     | exp '+' exp {
