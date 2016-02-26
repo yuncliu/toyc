@@ -19,7 +19,6 @@ TEST=t.out
 VPATH		 = ./
 
 INC=-I.\
-	-I/usr/lib/llvm-3.7/include
 
 LIB=-L.
 

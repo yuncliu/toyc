@@ -207,7 +207,8 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
             if (IsGlobalVariable(l)) {
                 printf("get a global valriable\n");
                 ((GlobalVariable*)l)->setInitializer((Constant*)r);
-                return Single::getBuilder()->CreateStore(r, l);
+                return NULL;
+                //return Single::getBuilder()->CreateStore(r, l);
             }
 
             if (((AllocaInst*)l)->getAllocatedType()->getTypeID() == r->getType()->getTypeID()) {
@@ -454,7 +455,7 @@ void FuncAST::codegen(BlockAST* block) {
         // My understand,  AI is in register, here store it to stack;
         //AllocaInst *stackvar = Builder.CreateAlloca(ProtoType->Args->args[i]);
         AllocaInst *StackVar = Builder.CreateAlloca(ProtoType->getArgType(i));
-        Builder.CreateStore(it, StackVar);
+        Builder.CreateStore(&*it, StackVar);
         FuncBody->addLocalVariable(ProtoType->getArgName(i), StackVar);
     }
     if (NULL != this->FuncBody) {
