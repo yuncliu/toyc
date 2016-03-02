@@ -9,6 +9,7 @@ LINKS	=  -lstdc++ -lgtest -lpthread -lm \
 CCOBJS	=../lex.o \
 		../parser.o \
 		../ast.o \
+		../Visitor.o \
 		ast_test.o \
 		main_test.o
 

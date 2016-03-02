@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include "ast.h"
+#include "Visitor.h"
 using namespace std;
 int yylex (void);
 void yyerror (char const *);
@@ -13,14 +14,14 @@ extern char* yytext;
 %}
 
 %union {
-    ExprAST*     exprast;
-    StmtAST*     stmtast;
+    Expr*     expr;
+    Stmt*       stmt;
     BlockAST*    blockast;
     FuncProtoType* funcprototype;
     FuncArgsAST* funcargsast;
     FuncCallArgs* callargs;
-    FuncAST*     funast;
-    VarExprAST*  varast;
+    Func*     funast;
+    VarExpr*  varast;
     Type*        ty;
 }
 
@@ -34,11 +35,11 @@ extern char* yytext;
 %left '-' '+'
 %left '*' '/'
 %right '^'
-%type <exprast> exp
+%type <expr> exp
 %type <ty> type
-%type <exprast> identifier
-%type <exprast> var
-%type <stmtast> stmt
+%type <expr> identifier
+%type <expr> var
+%type <stmt> stmt
 %type <blockast> stmt_list
 %type <blockast> block
 %type <funcprototype> function_prototype
@@ -49,6 +50,8 @@ extern char* yytext;
 program:
     stmt_list {
         $1->codegen();
+        Visitor* v = new Visitor();
+        $1->Accept(v);
     }
 ;
 
@@ -74,34 +77,34 @@ stmt_list:
 
 stmt:
     exp ';' {
-        $$ = new StmtAST($1);
+        $$ = new Stmt($1);
     }
     |var ';' {
-        $$ = (StmtAST*)new VarStmtAST($1);
+        $$ = (Stmt*)new VarStmt($1);
     }
     |RETURN exp ';' {
-        $$ = (StmtAST*)new ReturnStmtAST($2);
+        $$ = (Stmt*)new ReturnStmt($2);
     }
     |function {
-        $$ = (StmtAST*)$1;
+        $$ = (Stmt*)$1;
     }
     | IF '(' exp ')' block {
-        $$ = (StmtAST*)new IfStmtAST($3, $5, NULL);
+        $$ = (Stmt*)new IfStmt($3, $5, NULL);
     }
     | IF '(' exp ')' block ELSE block {
-        $$ = (StmtAST*)new IfStmtAST($3, $5, $7);
+        $$ = (Stmt*)new IfStmt($3, $5, $7);
     }
 ;
 
 function:
     function_prototype block {
-        $$ = new FuncAST($1, $2);
+        $$ = new Func($1, $2);
     }
 ;
 
 function_prototype:
     type identifier '(' function_args ')' {
-        $$ = new FuncProtoType((IdExprAST*)$2, $1, $4);
+        $$ = new FuncProtoType((IdExpr*)$2, $1, $4);
     }
 ;
 
@@ -112,52 +115,52 @@ function_args:
     }
     |var {
         $$ = new FuncArgsAST();
-        $$->addArg((VarExprAST*)$1);
+        $$->addArg((VarExpr*)$1);
     }
     |function_args ',' var {
-        $1->addArg((VarExprAST*)$3);
+        $1->addArg((VarExpr*)$3);
     }
 ;
 
 var:
     type identifier {
-        $$ = (ExprAST*)new VarExprAST($1, (IdExprAST*)$2);
+        $$ = (Expr*)new VarExpr($1, (IdExpr*)$2);
         printf("var define\n");
     }
 ;
 
 exp:
     INTEGER {
-        $$ = (ExprAST*)new IntExprAST(atoi(yytext));
+        $$ = (Expr*)new IntExpr(atoi(yytext));
     }
     |DOUBLE {
         printf("new double [%f]\n", atof(yytext));
-        $$ = (ExprAST*)new DoubleExprAST(atof(yytext));
+        $$ = (Expr*)new DoubleExpr(atof(yytext));
     }
     | exp '+' exp {
-        $$ = (ExprAST*)new BinaryExprAST('+', $1, $3);
+        $$ = (Expr*)new BinaryExpr('+', $1, $3);
     }
     | exp '-' exp {
-        $$ = (ExprAST*)new BinaryExprAST('-', $1, $3);
+        $$ = (Expr*)new BinaryExpr('-', $1, $3);
     }
     | exp '*' exp {
-        $$ = (ExprAST*)new BinaryExprAST('*', $1, $3);
+        $$ = (Expr*)new BinaryExpr('*', $1, $3);
     }
     | exp '/' exp {
-        $$ = (ExprAST*)new BinaryExprAST('/', $1, $3);
+        $$ = (Expr*)new BinaryExpr('/', $1, $3);
     }
     | exp '=' exp {
-        $$ = (ExprAST*)new BinaryExprAST('=', $1, $3);
+        $$ = (Expr*)new BinaryExpr('=', $1, $3);
     }
     | identifier {
-        $$ = (ExprAST*)$1;
+        $$ = (Expr*)$1;
     }
     | var {
         $$ = $1;
     }
     | identifier '(' call_args ')' {
         printf("function call\n");
-        $$ = (ExprAST*)new FuncCallExpr((IdExprAST*)$1, $3);
+        $$ = (Expr*)new FuncCallExpr((IdExpr*)$1, $3);
     }
 ;
 
@@ -176,7 +179,7 @@ call_args:
 ;
 identifier:
   ID {
-        $$ = new IdExprAST(yytext);
+        $$ = new IdExpr(yytext);
   }
 ;
 

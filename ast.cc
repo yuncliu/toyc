@@ -8,29 +8,29 @@ bool IsGlobalVariable(Value* v) {
     return v->getValueID() == Value::GlobalVariableVal;
 }
 
-// ExprAST
-ExprAST::ExprAST() {
+// Expr
+Expr::Expr() {
 }
 
-ExprAST::~ExprAST() {
+Expr::~Expr() {
 }
 
-Value* ExprAST::codegen(BlockAST* block) {
+Value* Expr::codegen(BlockAST* block) {
     return NULL;
 }
 
-// IdExprAST
-IdExprAST::IdExprAST(std::string s) :name(s){
+// IdExpr
+IdExpr::IdExpr(std::string s) :name(s){
 }
 
-IdExprAST::~IdExprAST() {
+IdExpr::~IdExpr() {
 }
 
-std::string IdExprAST::getName() {
+std::string IdExpr::getName() {
     return this->name;
 }
 
-Value* IdExprAST::codegen(BlockAST* block) {
+Value* IdExpr::codegen(BlockAST* block) {
     //std::map<std::string, Value*>::iterator it = block->locals.find(name);
     Value* v = block->getLocalVariable(name);
     if (NULL != v) {
@@ -45,38 +45,38 @@ Value* IdExprAST::codegen(BlockAST* block) {
     return NULL;
 }
 
-// IntExprAST
-IntExprAST::IntExprAST(int i): value(i) {
+// IntExpr
+IntExpr::IntExpr(int i): value(i) {
 }
 
-IntExprAST::~IntExprAST() {
+IntExpr::~IntExpr() {
 }
 
-Value* IntExprAST::codegen(BlockAST* block) {
+Value* IntExpr::codegen(BlockAST* block) {
     return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), value, true);
 }
 
-DoubleExprAST::DoubleExprAST(double d)
+DoubleExpr::DoubleExpr(double d)
     :value(d) {
 }
 
-DoubleExprAST::~DoubleExprAST() {
+DoubleExpr::~DoubleExpr() {
 }
 
-Value* DoubleExprAST::codegen(BlockAST* block) {
+Value* DoubleExpr::codegen(BlockAST* block) {
     printf("double code gen [%f]\n", value);
     return ConstantFP::get(getGlobalContext(), APFloat(value));
 }
 
-//VarExprAST
-VarExprAST::VarExprAST(Type* ty, IdExprAST* id)
+//VarExpr
+VarExpr::VarExpr(Type* ty, IdExpr* id)
 :type(ty), Id(id) {
 }
 
-VarExprAST::~VarExprAST() {
+VarExpr::~VarExpr() {
 }
 
-Value* VarExprAST::codegen(BlockAST* block) {
+Value* VarExpr::codegen(BlockAST* block) {
     if (block->block != NULL) {
         // allocate on stack
         IRBuilder<> Builder(block->block);
@@ -99,15 +99,15 @@ Value* VarExprAST::codegen(BlockAST* block) {
     return NULL;
 }
 
-std::string VarExprAST::getName() {
+std::string VarExpr::getName() {
     return Id->getName();
 }
 
-Type* VarExprAST::getType() {
+Type* VarExpr::getType() {
     return type;
 }
 
-FuncCallExpr::FuncCallExpr(IdExprAST* id, FuncCallArgs* args)
+FuncCallExpr::FuncCallExpr(IdExpr* id, FuncCallArgs* args)
 :Id(id), Args(args) {
 }
 
@@ -125,15 +125,15 @@ Value* FuncCallExpr::codegen(BlockAST* block) {
     return call;
 }
 
-// BinaryExprAST
-BinaryExprAST::BinaryExprAST(char op, ExprAST* l, ExprAST* r)
+// BinaryExpr
+BinaryExpr::BinaryExpr(char op, Expr* l, Expr* r)
     :op(op), left(l), right(r) {
     }
 
-BinaryExprAST::~BinaryExprAST() {
+BinaryExpr::~BinaryExpr() {
 }
 
-Value* BinaryExprAST::codegen(BlockAST* block) {
+Value* BinaryExpr::codegen(BlockAST* block) {
     Value* l = NULL;
     Value* r = NULL;
     switch(this->op) {
@@ -230,30 +230,38 @@ Value* BinaryExprAST::codegen(BlockAST* block) {
     return NULL;
 }
 
-//StmtAST
-StmtAST::StmtAST(): value(NULL) {
+//Stmt
+Stmt::Stmt(): value(NULL) {
 }
 
-StmtAST::StmtAST(ExprAST* e):value(e) {
+Stmt::Stmt(Expr* e):value(e) {
 }
 
-StmtAST::~StmtAST() {
+Stmt::~Stmt() {
 }
 
-void StmtAST::codegen(BlockAST* block) {
+void Stmt::codegen(BlockAST* block) {
     if (NULL != value) {
         value->codegen(block);
     }
 }
 
-// ReturnStmtAST
-ReturnStmtAST::ReturnStmtAST(ExprAST* e): StmtAST(e) {
+std::string Stmt::Info() {
+    return std::string("Statement");
 }
 
-ReturnStmtAST::~ReturnStmtAST() {
+void Stmt::Accept(Visitor* v) {
+    v->VisitStmt(this);
 }
 
-void ReturnStmtAST::codegen(BlockAST* block) {
+// ReturnStmt
+ReturnStmt::ReturnStmt(Expr* e): Stmt(e) {
+}
+
+ReturnStmt::~ReturnStmt() {
+}
+
+void ReturnStmt::codegen(BlockAST* block) {
     Value *retval = value->codegen(block);
     if (NULL == retval) {
         printf("return stmt generate failed\n");
@@ -266,14 +274,18 @@ void ReturnStmtAST::codegen(BlockAST* block) {
     Single::getBuilder()->CreateRet(retval);
 }
 
-//VarStmtAST
-VarStmtAST::VarStmtAST(ExprAST* v): StmtAST(v) {
+std::string ReturnStmt::Info() {
+    return std::string("return statement");
 }
 
-VarStmtAST::~VarStmtAST() {
+//VarStmt
+VarStmt::VarStmt(Expr* v): Stmt(v) {
 }
 
-void VarStmtAST::codegen(BlockAST* block) {
+VarStmt::~VarStmt() {
+}
+
+void VarStmt::codegen(BlockAST* block) {
     Value* p = value->codegen(block);
     p->getType()->dump();
 }
@@ -311,11 +323,19 @@ Value* BlockAST::getLocalVariable(std::string n) {
     return Parent->getLocalVariable(n);
 }
 
-void BlockAST::addStatement(StmtAST* s) {
+void BlockAST::addStatement(Stmt* s) {
     this->stmts.push_back(s);
 }
 void BlockAST::setParent(BlockAST* p) {
     this->Parent = p;
+}
+
+void BlockAST::Accept(Visitor* v) {
+    printf("Accept [%ld]\n", stmts.size());
+    std::vector<Stmt*>::iterator it;
+    for (it = stmts.begin(); it != stmts.end(); ++it) {
+        v->VisitStmt(*it);
+    }
 }
 
 // FuncArgsAST
@@ -325,7 +345,7 @@ FuncArgsAST::FuncArgsAST() {
 FuncArgsAST::~FuncArgsAST() {
 }
 
-void FuncArgsAST::addArg(VarExprAST* v) {
+void FuncArgsAST::addArg(VarExpr* v) {
     Names.push_back(v->getName());
     Args.push_back(v->getType());
 }
@@ -356,12 +376,12 @@ std::string FuncArgsAST::getArgName(size_t i) {
 }
 
 /**
- *FuncAST
+ *Function
  *param[in] i      id of function name
  *param[in] rty    return type
  *param[in] args   args
  */
-FuncProtoType::FuncProtoType(IdExprAST* i, Type* rty, FuncArgsAST* args)
+FuncProtoType::FuncProtoType(IdExpr* i, Type* rty, FuncArgsAST* args)
     :Id(i), ReturnTy(rty), Args(args) {
     }
 
@@ -413,12 +433,12 @@ FuncCallArgs::FuncCallArgs() {
 FuncCallArgs::~FuncCallArgs() {
 }
 
-void FuncCallArgs::pushArg(ExprAST* arg) {
+void FuncCallArgs::pushArg(Expr* arg) {
     this->Args.push_back(arg);
 }
 std::vector<Value*> FuncCallArgs::getArgs(BlockAST* block) {
     std::vector<Value*> args;
-    std::vector<ExprAST*>::iterator it;
+    std::vector<Expr*>::iterator it;
     for (it = Args.begin(); it != Args.end(); ++it) {
         Value* p = (**it).codegen(block);
         if (IsAllocaInst(p)) {
@@ -432,16 +452,16 @@ std::vector<Value*> FuncCallArgs::getArgs(BlockAST* block) {
 }
 
 
-// FuncAST
-FuncAST::FuncAST(FuncProtoType* f, BlockAST* b)
+// Func
+Func::Func(FuncProtoType* f, BlockAST* b)
     :ProtoType(f), FuncBody(b){
     }
 
-FuncAST::~FuncAST() {
+Func::~Func() {
 }
 
-//Function* FuncAST::codegen() {
-void FuncAST::codegen(BlockAST* block) {
+//Function* Function::codegen() {
+void Func::codegen(BlockAST* block) {
     // Set names for all arguments.
     Function* F = ProtoType->codegen();
     BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
@@ -465,17 +485,27 @@ void FuncAST::codegen(BlockAST* block) {
     }
 }
 
-std::string FuncAST::getName() {
+std::string Func::getName() {
     return ProtoType->getName();
 }
 
-IfStmtAST::IfStmtAST(ExprAST* Cond, BlockAST* Then, BlockAST* Else)
-    :Cond(Cond),Then(Then), Else(Else) {
-    }
-IfStmtAST::~IfStmtAST() {
+std::string Func::Info() {
+    char buf[20] = {0};
+    snprintf(buf, 20, "Function [%s]", this->getName().c_str());
+    return std::string(buf);
 }
 
-void IfStmtAST::codegen(BlockAST* block) {
+void Func::Accept(Visitor* v) {
+    v->VisitFunc(this);
+}
+
+IfStmt::IfStmt(Expr* Cond, BlockAST* Then, BlockAST* Else)
+    :Cond(Cond),Then(Then), Else(Else) {
+    }
+IfStmt::~IfStmt() {
+}
+
+void IfStmt::codegen(BlockAST* block) {
     Value* CondV = Cond->codegen(block);
     if (NULL == CondV) {
         return;

@@ -10,21 +10,23 @@
 #include "llvm/IR/Verifier.h"
 #include <string>
 #include <vector>
+#include "Visitor.h"
 #define  LOG(fmt, args...)  if (0) printf(fmt, ##args)
 using namespace llvm;
 
-class ExprAST;
-class IdExprAST;
-class IntExprAST;
-class VarExprAST;
-class BinaryExprAST;
-class StmtAST;
-class ReturnStmtAST;
+class Expr;
+class IdExpr;
+class IntExpr;
+class VarExpr;
+class BinaryExpr;
+class Stmt;
+class ReturnStmt;
 class BlockAST;
 class FuncArgsAST;
 class FuncProtoType;
 class FuncCallArgs;
-class FuncAST;
+class Func;
+class Visitor;
 
 class Single {
     static Module*      m;
@@ -59,94 +61,97 @@ bool IsAllocaInst(Value* v);
 bool IsGlobalVariable(Value* v);
 
 
-class ExprAST {
+class Expr {
     public:
-        ExprAST();
-        virtual ~ExprAST();
+        Expr();
+        virtual ~Expr();
         virtual Value* codegen(BlockAST* block);
 };
 
-class IdExprAST:public ExprAST{
+class IdExpr:public Expr{
         std::string      name;
     public:
-        IdExprAST(std::string s);
-        virtual ~IdExprAST();
+        IdExpr(std::string s);
+        virtual ~IdExpr();
         Value* codegen(BlockAST* block);
         std::string getName();
 };
 
-class IntExprAST: ExprAST {
+class IntExpr: Expr {
         int value;
     public:
-        IntExprAST(int i);
-        ~IntExprAST();
+        IntExpr(int i);
+        ~IntExpr();
         Value* codegen(BlockAST* block);
 };
 
-class DoubleExprAST: ExprAST {
+class DoubleExpr: Expr {
         double value;
     public:
-        DoubleExprAST(double d);
-        ~DoubleExprAST();
+        DoubleExpr(double d);
+        ~DoubleExpr();
         Value* codegen(BlockAST* block);
 };
 
-class VarExprAST: ExprAST {
+class VarExpr: Expr {
         Type* type;
-        IdExprAST* Id;
+        IdExpr* Id;
     public:
-        VarExprAST(Type* ty, IdExprAST* id);
-        ~VarExprAST();
+        VarExpr(Type* ty, IdExpr* id);
+        ~VarExpr();
         Value* codegen(BlockAST* block);
         std::string getName();
         Type* getType();
 };
 
-class FuncCallExpr: ExprAST {
-    IdExprAST* Id;
+class FuncCallExpr: Expr {
+    IdExpr* Id;
     FuncCallArgs* Args;
     public:
-        FuncCallExpr(IdExprAST* id, FuncCallArgs* args);
+        FuncCallExpr(IdExpr* id, FuncCallArgs* args);
         ~FuncCallExpr();
         Value* codegen(BlockAST* block);
 };
 
-class BinaryExprAST {
+class BinaryExpr {
         char op;
-        ExprAST* left;
-        ExprAST* right;
+        Expr* left;
+        Expr* right;
     public:
-        BinaryExprAST(char op, ExprAST* l, ExprAST* r);
-        virtual ~BinaryExprAST();
+        BinaryExpr(char op, Expr* l, Expr* r);
+        virtual ~BinaryExpr();
         virtual Value* codegen(BlockAST* block);
 };
 
-class StmtAST {
+class Stmt {
     protected:
-        ExprAST* value;
+        Expr* value;
     public:
-        StmtAST();
-        StmtAST(ExprAST* e);
-        ~StmtAST();
+        Stmt();
+        Stmt(Expr* e);
+        ~Stmt();
         virtual void codegen(BlockAST* block);
+        virtual std::string Info();
+        virtual void Accept(Visitor* v);
 };
 
-class ReturnStmtAST: public StmtAST {
+class ReturnStmt: public Stmt {
     public:
-        ReturnStmtAST(ExprAST* e);
-        ~ReturnStmtAST();
+        ReturnStmt(Expr* e);
+        ~ReturnStmt();
         virtual void codegen(BlockAST* block);
+        std::string Info();
 };
 
-class VarStmtAST: public StmtAST {
+class VarStmt: public Stmt {
     public:
-        VarStmtAST(ExprAST* v);
-        ~VarStmtAST();
+        VarStmt(Expr* v);
+        ~VarStmt();
         virtual void codegen(BlockAST* block);
 };
 
 class BlockAST {
-        std::vector<StmtAST*> stmts;
+        std::vector<Stmt*> stmts;
         std::map<std::string, Value*> locals;
         BlockAST* Parent;
     public:
@@ -156,8 +161,9 @@ class BlockAST {
         virtual void codegen();
         void addLocalVariable(std::string n, Value* v);
         Value* getLocalVariable(std::string n);
-        void addStatement(StmtAST* s);
+        void addStatement(Stmt* s);
         void setParent(BlockAST* p);
+        void Accept(Visitor* v);
 };
 
 class FuncArgsAST {
@@ -166,7 +172,7 @@ class FuncArgsAST {
     public:
         FuncArgsAST();
         ~FuncArgsAST();
-        void addArg(VarExprAST* v);
+        void addArg(VarExpr* v);
         std::vector<std::string> getArgNames();
         size_t getArgSize();
         std::vector<Type*> getArgs();
@@ -175,11 +181,11 @@ class FuncArgsAST {
 };
 
 class FuncProtoType {
-        IdExprAST* Id;
+        IdExpr* Id;
         Type* ReturnTy;
         FuncArgsAST* Args;
     public:
-        FuncProtoType(IdExprAST* i, Type* rty, FuncArgsAST* args);
+        FuncProtoType(IdExpr* i, Type* rty, FuncArgsAST* args);
         ~FuncProtoType();
         FunctionType* getFunctionType();
         Function* codegen();
@@ -191,36 +197,33 @@ class FuncProtoType {
 };
 
 class FuncCallArgs {
-    std::vector<ExprAST*> Args;
+    std::vector<Expr*> Args;
     public:
     FuncCallArgs();
     ~FuncCallArgs();
-    void pushArg(ExprAST* arg);
+    void pushArg(Expr* arg);
     std::vector<Value*> getArgs(BlockAST* block);
 };
 
-class FuncAST: StmtAST {
+class Func: Stmt {
         FuncProtoType* ProtoType;
         BlockAST* FuncBody;
     public:
-        FuncAST(FuncProtoType* f, BlockAST* b);
-        ~FuncAST();
+        Func(FuncProtoType* f, BlockAST* b);
+        ~Func();
         virtual void codegen(BlockAST* block);
         std::string getName();
+        virtual std::string Info();
+        virtual void Accept(Visitor* v);
 };
 
-class IfStmtAST: StmtAST {
-    ExprAST* Cond;
+class IfStmt: Stmt {
+    Expr* Cond;
     BlockAST* Then;
     BlockAST* Else;
     public:
-    IfStmtAST(ExprAST* Cond, BlockAST* Then, BlockAST* Else);
-    ~IfStmtAST();
+    IfStmt(Expr* Cond, BlockAST* Then, BlockAST* Else);
+    ~IfStmt();
     virtual void codegen(BlockAST* block);
 };
-
-class ProgramAST {
-    public:
-};
-
 #endif
