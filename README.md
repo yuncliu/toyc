@@ -1,19 +1,14 @@
 ##Learn compile principle
 
-now could run code like this
+sample C compiler
 
-```C
-a=10;
-x=1;
-while(a-1) {
-    x = x*a;
-    a = a-1;
-    print(a);
-};
-print(x);
+```shell
+make gtest
+make test
+./t.out
 ```
 
 How to execute
 ```shell
-./a.out < while.t
+./a.out < 1.c
 ```
