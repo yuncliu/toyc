@@ -100,8 +100,9 @@ class VarExpr: Expr {
         VarExpr(Type* ty, IdExpr* id);
         ~VarExpr();
         Value* codegen(BlockAST* block);
-        std::string getName();
         Type* getType();
+        std::string getName();
+        std::string Info();
 };
 
 class FuncCallExpr: Expr {
@@ -169,6 +170,7 @@ class BlockAST {
 class FuncArgsAST {
         std::vector<std::string> Names;
         std::vector<Type*>  Args;
+        std::vector<VarExpr*>  ParmVars;
     public:
         FuncArgsAST();
         ~FuncArgsAST();
@@ -178,6 +180,7 @@ class FuncArgsAST {
         std::vector<Type*> getArgs();
         Type* getArgType(size_t i);
         std::string getArgName(size_t i);
+        void Accept(Visitor* v);
 };
 
 class FuncProtoType {
@@ -194,6 +197,7 @@ class FuncProtoType {
         Type* getArgType(size_t i);
         std::string getArgName(size_t i);
         std::vector<Type*> getArgs();
+        void Accept(Visitor* v);
 };
 
 class FuncCallArgs {

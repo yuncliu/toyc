@@ -107,6 +107,12 @@ Type* VarExpr::getType() {
     return type;
 }
 
+std::string VarExpr::Info() {
+    char buf[20] = {0};
+    snprintf(buf, 20, "Var %s", Id->getName().c_str());
+    return std::string(buf);
+}
+
 FuncCallExpr::FuncCallExpr(IdExpr* id, FuncCallArgs* args)
 :Id(id), Args(args) {
 }
@@ -251,7 +257,6 @@ std::string Stmt::Info() {
 }
 
 void Stmt::Accept(Visitor* v) {
-    v->VisitStmt(this);
 }
 
 // ReturnStmt
@@ -331,10 +336,10 @@ void BlockAST::setParent(BlockAST* p) {
 }
 
 void BlockAST::Accept(Visitor* v) {
-    printf("Accept [%ld]\n", stmts.size());
     std::vector<Stmt*>::iterator it;
     for (it = stmts.begin(); it != stmts.end(); ++it) {
         v->VisitStmt(*it);
+        (*it)->Accept(v);
     }
 }
 
@@ -348,6 +353,7 @@ FuncArgsAST::~FuncArgsAST() {
 void FuncArgsAST::addArg(VarExpr* v) {
     Names.push_back(v->getName());
     Args.push_back(v->getType());
+    ParmVars.push_back(v);
 }
 
 std::vector<std::string> FuncArgsAST::getArgNames() {
@@ -373,6 +379,13 @@ std::string FuncArgsAST::getArgName(size_t i) {
         return NULL;
     }
     return Names[i];
+}
+
+void FuncArgsAST::Accept(Visitor* v) {
+    std::vector<VarExpr*>::iterator it;
+    for (it = ParmVars.begin(); it != ParmVars.end(); ++it) {
+        v->VisitVarExpr(*it);
+    }
 }
 
 /**
@@ -424,6 +437,10 @@ std::string FuncProtoType::getArgName(size_t i) {
 
 std::vector<Type*> FuncProtoType::getArgs() {
     return this->Args->getArgs();
+}
+
+void FuncProtoType::Accept(Visitor* v) {
+    Args->Accept(v);
 }
 
 // FuncCallArgs
@@ -497,6 +514,7 @@ std::string Func::Info() {
 
 void Func::Accept(Visitor* v) {
     v->VisitFunc(this);
+    ProtoType->Accept(v);
 }
 
 IfStmt::IfStmt(Expr* Cond, BlockAST* Then, BlockAST* Else)
