@@ -77,7 +77,7 @@ stmt:
         $$ = new StmtAST($1);
     }
     |var ';' {
-        $$ = (StmtAST*)new VarStmtAST((VarExprAST*)$1);
+        $$ = (StmtAST*)new VarStmtAST($1);
     }
     |RETURN exp ';' {
         $$ = (StmtAST*)new ReturnStmtAST($2);

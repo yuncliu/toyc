@@ -247,14 +247,14 @@ void StmtAST::codegen(BlockAST* block) {
 }
 
 // ReturnStmtAST
-ReturnStmtAST::ReturnStmtAST(ExprAST* e): expr(e) {
+ReturnStmtAST::ReturnStmtAST(ExprAST* e): StmtAST(e) {
 }
 
 ReturnStmtAST::~ReturnStmtAST() {
 }
 
 void ReturnStmtAST::codegen(BlockAST* block) {
-    Value *retval = expr->codegen(block);
+    Value *retval = value->codegen(block);
     if (NULL == retval) {
         printf("return stmt generate failed\n");
         return;
@@ -267,7 +267,7 @@ void ReturnStmtAST::codegen(BlockAST* block) {
 }
 
 //VarStmtAST
-VarStmtAST::VarStmtAST(VarExprAST* v): value(v) {
+VarStmtAST::VarStmtAST(ExprAST* v): StmtAST(v) {
 }
 
 VarStmtAST::~VarStmtAST() {

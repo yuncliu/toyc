@@ -122,6 +122,7 @@ class BinaryExprAST {
 };
 
 class StmtAST {
+    protected:
         ExprAST* value;
     public:
         StmtAST();
@@ -131,7 +132,6 @@ class StmtAST {
 };
 
 class ReturnStmtAST: public StmtAST {
-        ExprAST* expr;
     public:
         ReturnStmtAST(ExprAST* e);
         ~ReturnStmtAST();
@@ -139,9 +139,8 @@ class ReturnStmtAST: public StmtAST {
 };
 
 class VarStmtAST: public StmtAST {
-        VarExprAST* value;
     public:
-        VarStmtAST(VarExprAST* v);
+        VarStmtAST(ExprAST* v);
         ~VarStmtAST();
         virtual void codegen(BlockAST* block);
 };
