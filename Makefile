@@ -9,6 +9,8 @@ LINKS	=  -lstdc++ -lm `llvm-config --ldflags --system-libs --libs`
 EXEOBJS	= lex.o \
 		  parser.o \
 		  ast.o \
+		  Expr.o \
+		  Stmt.o \
 		  Visitor.o \
 		  main.o
 

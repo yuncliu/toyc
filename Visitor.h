@@ -1,6 +1,5 @@
 #ifndef _VISITOR_H_
 #define _VISITOR_H_
-#include "ast.h"
 
 class Expr;
 class Stmt;

@@ -6,6 +6,8 @@
 #include <string>
 #include <map>
 #include "ast.h"
+#include "Expr.h"
+#include "Stmt.h"
 #include "Visitor.h"
 using namespace std;
 int yylex (void);

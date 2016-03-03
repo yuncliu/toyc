@@ -2,6 +2,8 @@
 #include <stdlib.h>
 
 #include "ast.h"
+#include "Expr.h"
+#include "Stmt.h"
 #include "parser.h"
 #if __cplusplus >= 201103L
     #define register
