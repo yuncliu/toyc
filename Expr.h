@@ -52,6 +52,7 @@ class FuncCallExpr: public Stmt {
 };
 
 class BinaryExpr:public Stmt {
+    friend Visitor;
     char op;
     Stmt* left;
     Stmt* right;
@@ -59,5 +60,4 @@ class BinaryExpr:public Stmt {
     BinaryExpr(char op, Stmt* l, Stmt* r);
     virtual ~BinaryExpr();
 };
-
 #endif

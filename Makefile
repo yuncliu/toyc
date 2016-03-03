@@ -2,7 +2,7 @@ CPP=${CXX}
 LEX=flex
 YACC=bison
 CC=${CC}
-CFLAGS=-Wall -Werror -std=c++11 -g -fno-exceptions -fno-rtti -fno-common -Wcast-qual \
+CFLAGS=-Wall -std=c++11 -g -fno-exceptions -fno-rtti -fno-common -Wcast-qual \
 	   -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 LINKS	=  -lstdc++ -lm `llvm-config --ldflags --system-libs --libs`
 

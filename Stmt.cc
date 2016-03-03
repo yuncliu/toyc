@@ -3,13 +3,19 @@
 #include "Stmt.h"
 
 //Stmt
-Stmt::Stmt(std::string name): Name("Stmt") {
+Stmt::Stmt(std::string name) {
+    if (name.size() == 0 ) {
+        Name = std::string("Stmt");
+    }else {
+        Name = name;
+    }
 }
 
 Stmt::~Stmt() {
 }
 
 void Stmt::Accept(Visitor* v) {
+    v->Visit(this);
 }
 
 std::string Stmt::getSelfName() {
@@ -34,12 +40,8 @@ void CompoundStmt::addStatement(Stmt* s) {
     this->stmts.push_back(s);
 }
 
-void CompoundStmt::Accept(Visitor* v) {
-    v->VisitCompundStmt(this);
-}
-
 // FuncParamter
-FuncParameter::FuncParameter():Stmt("FuncParamter") {
+FuncParameter::FuncParameter():Stmt("FuncParameter") {
 }
 
 FuncParameter::~FuncParameter() {

@@ -18,6 +18,7 @@ class Stmt {
 };
 
 class ReturnStmt: public Stmt {
+    friend Visitor;
     Stmt* Ret;
     public:
         ReturnStmt(Stmt* ret);
@@ -31,7 +32,6 @@ class CompoundStmt:public Stmt {
         CompoundStmt();
         ~CompoundStmt();
         void addStatement(Stmt* s);
-        void Accept(Visitor* v);
 };
 
 class FuncParameter: public Stmt {

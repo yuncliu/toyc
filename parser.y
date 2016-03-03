@@ -123,7 +123,6 @@ function_args:
 var:
     type identifier {
         $$ = (Stmt*)new VarExpr((TypeExpr*)$1, (IdExpr*)$2);
-        printf("var define\n");
     }
 ;
 
