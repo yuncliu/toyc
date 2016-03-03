@@ -32,6 +32,7 @@ void Visitor::Visit(Stmt* s) {
         printf("No visit function for [%s]\n", s->getSelfName().c_str());
         return;
     }
+    print_indent();
     (this->*func)(s);
 }
 
@@ -43,7 +44,6 @@ void Visitor::print_indent() {
 
 void Visitor::VisitCompoundStmt(Stmt* stmt) {
     CompoundStmt* p = (CompoundStmt*)stmt;
-    print_indent();
     printf("%s\n", "CompoundStmt");
     this->indent++;
     for (auto it: p->stmts) {
@@ -53,7 +53,6 @@ void Visitor::VisitCompoundStmt(Stmt* stmt) {
 }
 
 void Visitor::VisitFunc(Stmt* stmt) {
-    print_indent();
     Func* f = (Func*)stmt;
     printf("%s\n", "Function");
     this->indent++;
@@ -62,7 +61,6 @@ void Visitor::VisitFunc(Stmt* stmt) {
     this->indent--;
 }
 void Visitor::VisitFuncProtoType(Stmt* stmt) {
-    print_indent();
     FuncProtoType* f = (FuncProtoType*)stmt;
     printf("%s\n", "FunctionProtoType");
     this->indent++;
@@ -72,19 +70,16 @@ void Visitor::VisitFuncProtoType(Stmt* stmt) {
     this->indent--;
 }
 void Visitor::VisitIdExpr(Stmt* stmt) {
-    print_indent();
     IdExpr* p = (IdExpr*)stmt;
     printf("IdExpr[%s]\n", p->Id.c_str());
 }
 
 void Visitor::VisitTypeExpr(Stmt* stmt) {
-    print_indent();
     TypeExpr* p = (TypeExpr*)stmt;
     printf("[%d]TypeExpr[%s]\n", this->indent, p->Type.c_str());
 }
 
 void Visitor::VisitFuncParameter(Stmt* stmt) {
-    print_indent();
     FuncParameter* p = (FuncParameter*)stmt;
     printf("FuncParameters\n");
     this->indent++;
@@ -94,7 +89,6 @@ void Visitor::VisitFuncParameter(Stmt* stmt) {
     this->indent--;
 }
 void Visitor::VisitVarExpr(Stmt* stmt) {
-    print_indent();
     VarExpr* p = (VarExpr*)stmt;
     printf("Variable\n");
     this->indent++;
@@ -104,7 +98,6 @@ void Visitor::VisitVarExpr(Stmt* stmt) {
 }
 
 void Visitor::VisitBinaryExpr(Stmt* stmt) {
-    print_indent();
     BinaryExpr* p = (BinaryExpr*)stmt;
     this->indent++;
     printf("BinaryExpr: operator[%c]\n", p->op);
@@ -113,7 +106,6 @@ void Visitor::VisitBinaryExpr(Stmt* stmt) {
     this->indent--;
 }
 void Visitor::VisitReturnStmt(Stmt* stmt) {
-    print_indent();
     ReturnStmt* p = (ReturnStmt*)stmt;
     this->indent++;
     printf("ReturnStmt\n");
@@ -122,7 +114,6 @@ void Visitor::VisitReturnStmt(Stmt* stmt) {
 }
 
 void Visitor::VisitIntExpr(Stmt* stmt) {
-    print_indent();
     IntExpr* p = (IntExpr*)stmt;
     printf("IntExpr: [%d]\n", p->value);
 }
