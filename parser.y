@@ -16,15 +16,7 @@ extern char* yytext;
 %}
 
 %union {
-    Expr*     expr;
     Stmt*       stmt;
-    BlockAST*    blockast;
-    FuncProtoType* funcprototype;
-    FuncArgsAST* funcargsast;
-    FuncCallArgs* callargs;
-    Func*     funast;
-    VarExpr*  varast;
-    Type*        ty;
 }
 
 %token  DOUBLE
@@ -37,21 +29,20 @@ extern char* yytext;
 %left '-' '+'
 %left '*' '/'
 %right '^'
-%type <expr> exp
-%type <ty> type
-%type <expr> identifier
-%type <expr> var
+%type <stmt> exp
+%type <stmt> type
+%type <stmt> identifier
+%type <stmt> var
 %type <stmt> stmt
-%type <blockast> stmt_list
-%type <blockast> block
-%type <funcprototype> function_prototype
-%type <funcargsast> function_args
-%type <callargs> call_args
-%type <funast> function
+%type <stmt> stmt_list
+%type <stmt> block
+%type <stmt> function_prototype
+%type <stmt> function_args
+%type <stmt> call_args
+%type <stmt> function
 %%
 program:
     stmt_list {
-        $1->codegen();
         Visitor* v = new Visitor();
         $1->Accept(v);
     }
@@ -68,21 +59,23 @@ block:
 
 stmt_list:
     stmt {
-        $$ = new BlockAST();
-        $$->addStatement($1);
+        CompoundStmt* p =  new CompoundStmt();
+        p->addStatement($1);
+        $$ = (Stmt*)p;
     }
     |stmt_list stmt {
+        CompoundStmt* p =  (CompoundStmt*)$1;
+        p->addStatement($2);
         $$ = $1;
-        $$->addStatement($2);
     }
 ;
 
 stmt:
     exp ';' {
-        $$ = new Stmt($1);
+        $$ = $1;
     }
     |var ';' {
-        $$ = (Stmt*)new VarStmt($1);
+        $$ = $1;
     }
     |RETURN exp ';' {
         $$ = (Stmt*)new ReturnStmt($2);
@@ -91,106 +84,112 @@ stmt:
         $$ = (Stmt*)$1;
     }
     | IF '(' exp ')' block {
-        $$ = (Stmt*)new IfStmt($3, $5, NULL);
+        $$ = (Stmt*)new IfStmt($3, (CompoundStmt*)$5, NULL);
     }
     | IF '(' exp ')' block ELSE block {
-        $$ = (Stmt*)new IfStmt($3, $5, $7);
+        $$ = (Stmt*)new IfStmt($3, (CompoundStmt*)$5, (CompoundStmt*)$7);
     }
 ;
 
 function:
     function_prototype block {
-        $$ = new Func($1, $2);
+        $$ = (Stmt*)new Func((FuncProtoType*)$1, (CompoundStmt*)$2);
     }
 ;
 
 function_prototype:
     type identifier '(' function_args ')' {
-        $$ = new FuncProtoType((IdExpr*)$2, $1, $4);
+        $$ = (Stmt*)new FuncProtoType((IdExpr*)$2, (TypeExpr*)$1, (FuncParameter*)$4);
     }
 ;
 
 function_args:
      {
         // for not args like  int foo()
-        $$ = new FuncArgsAST();
+        $$ = (Stmt*)new FuncParameter();
     }
     |var {
-        $$ = new FuncArgsAST();
-        $$->addArg((VarExpr*)$1);
+        FuncParameter* p = new FuncParameter();
+        p->addParam($1);
+        $$ = (Stmt*)p;
     }
     |function_args ',' var {
-        $1->addArg((VarExpr*)$3);
+        FuncParameter* p = (FuncParameter*)$1;
+        p->addParam($3);
+        $$ = $1;
     }
 ;
 
 var:
     type identifier {
-        $$ = (Expr*)new VarExpr($1, (IdExpr*)$2);
+        $$ = (Stmt*)new VarExpr((TypeExpr*)$1, (IdExpr*)$2);
         printf("var define\n");
     }
 ;
 
 exp:
     INTEGER {
-        $$ = (Expr*)new IntExpr(atoi(yytext));
+        $$ = (Stmt*)new IntExpr(atoi(yytext));
     }
     |DOUBLE {
         printf("new double [%f]\n", atof(yytext));
-        $$ = (Expr*)new DoubleExpr(atof(yytext));
+        $$ = (Stmt*)new DoubleExpr(atof(yytext));
     }
     | exp '+' exp {
-        $$ = (Expr*)new BinaryExpr('+', $1, $3);
+        $$ = (Stmt*)new BinaryExpr('+', $1, $3);
     }
     | exp '-' exp {
-        $$ = (Expr*)new BinaryExpr('-', $1, $3);
+        $$ = (Stmt*)new BinaryExpr('-', $1, $3);
     }
     | exp '*' exp {
-        $$ = (Expr*)new BinaryExpr('*', $1, $3);
+        $$ = (Stmt*)new BinaryExpr('*', $1, $3);
     }
     | exp '/' exp {
-        $$ = (Expr*)new BinaryExpr('/', $1, $3);
+        $$ = (Stmt*)new BinaryExpr('/', $1, $3);
     }
     | exp '=' exp {
-        $$ = (Expr*)new BinaryExpr('=', $1, $3);
+        $$ = (Stmt*)new BinaryExpr('=', $1, $3);
     }
     | identifier {
-        $$ = (Expr*)$1;
+        $$ = (Stmt*)$1;
     }
     | var {
         $$ = $1;
     }
     | identifier '(' call_args ')' {
         printf("function call\n");
-        $$ = (Expr*)new FuncCallExpr((IdExpr*)$1, $3);
+        $$ = (Stmt*)new FuncCallExpr((IdExpr*)$1, (FuncCallParams*)$3);
     }
 ;
 
 call_args:
      {
-        $$ = new FuncCallArgs();
+        $$ = (Stmt*)new FuncCallParams();
     }
     | exp {
-        $$ = new FuncCallArgs();
-        $$->pushArg($1);
+        FuncCallParams* p = new FuncCallParams();
+        p->pushParam($1);
+        $$ = (Stmt*)p;
     }
     | call_args ',' exp{
-        $$ = $1;
-        $$->pushArg($3);
+        FuncCallParams* p = (FuncCallParams*)$1;
+        p->pushParam($3);
+        $$ = (Stmt*)p;
     }
 ;
+
 identifier:
-  ID {
-        $$ = new IdExpr(yytext);
-  }
+    ID {
+        $$ = (Stmt*)new IdExpr(yytext);
+    }
 ;
 
 type:
     DOUBLE_TYPE {
-        $$ = Type::getDoubleTy(getGlobalContext());
+        $$ = (Stmt*)new TypeExpr("double");
     }
     |INTEGER_TYPE {
-        $$ = Type::getInt32Ty(getGlobalContext());
+        $$ = (Stmt*)new TypeExpr("int");
     }
 ;
 %%

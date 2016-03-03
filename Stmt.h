@@ -1,110 +1,82 @@
 #ifndef _STMT_H_
 #define _STMT_H_
+#include <string>
+class CompoundStmt;
+class Visitor;
+class IdExpr;
+class TypeExpr;
 
 class Stmt {
+        friend Visitor;
     protected:
-        Expr* value;
+        std::string Name;
     public:
-        Stmt();
-        Stmt(Expr* e);
+        Stmt(std::string name);
         ~Stmt();
-        virtual void codegen(BlockAST* block);
-        virtual std::string Info();
         virtual void Accept(Visitor* v);
+        virtual std::string getSelfName();
 };
 
 class ReturnStmt: public Stmt {
+    Stmt* Ret;
     public:
-        ReturnStmt(Expr* e);
+        ReturnStmt(Stmt* ret);
         ~ReturnStmt();
-        virtual void codegen(BlockAST* block);
-        std::string Info();
 };
 
-class VarStmt: public Stmt {
-    public:
-        VarStmt(Expr* v);
-        ~VarStmt();
-        virtual void codegen(BlockAST* block);
-};
-
-class BlockAST {
+class CompoundStmt:public Stmt {
+        friend Visitor;
         std::vector<Stmt*> stmts;
-        std::map<std::string, Value*> locals;
-        BlockAST* Parent;
     public:
-        BasicBlock* block;
-        BlockAST();
-        ~BlockAST();
-        virtual void codegen();
-        void addLocalVariable(std::string n, Value* v);
-        Value* getLocalVariable(std::string n);
+        CompoundStmt();
+        ~CompoundStmt();
         void addStatement(Stmt* s);
-        void setParent(BlockAST* p);
         void Accept(Visitor* v);
 };
 
-class FuncArgsAST {
-        std::vector<std::string> Names;
-        std::vector<Type*>  Args;
-        std::vector<VarExpr*>  ParmVars;
+class FuncParameter: public Stmt {
+        friend Visitor;
+        std::vector<Stmt*>  Params;
     public:
-        FuncArgsAST();
-        ~FuncArgsAST();
-        void addArg(VarExpr* v);
-        std::vector<std::string> getArgNames();
-        size_t getArgSize();
-        std::vector<Type*> getArgs();
-        Type* getArgType(size_t i);
-        std::string getArgName(size_t i);
-        void Accept(Visitor* v);
+        FuncParameter();
+        ~FuncParameter();
+        void addParam(Stmt* v);
 };
 
-class FuncProtoType {
+class FuncProtoType: public Stmt {
+        friend Visitor;
         IdExpr* Id;
-        Type* ReturnTy;
-        FuncArgsAST* Args;
+        TypeExpr* ReturnTy;
+        FuncParameter* Param;
     public:
-        FuncProtoType(IdExpr* i, Type* rty, FuncArgsAST* args);
+        FuncProtoType(IdExpr* i, TypeExpr* rty, FuncParameter* param);
         ~FuncProtoType();
-        FunctionType* getFunctionType();
-        Function* codegen();
-        std::string getName();
-        size_t getArgSize();
-        Type* getArgType(size_t i);
-        std::string getArgName(size_t i);
-        std::vector<Type*> getArgs();
-        void Accept(Visitor* v);
 };
 
-class FuncCallArgs {
-    std::vector<Expr*> Args;
+class FuncCallParams: public Stmt {
+    friend Visitor;
+    std::vector<Stmt*> Parameters;
     public:
-    FuncCallArgs();
-    ~FuncCallArgs();
-    void pushArg(Expr* arg);
-    std::vector<Value*> getArgs(BlockAST* block);
+    FuncCallParams();
+    ~FuncCallParams();
+    void pushParam(Stmt* parm);
 };
 
-class Func: Stmt {
+class Func:public Stmt {
+        friend Visitor;
         FuncProtoType* ProtoType;
-        BlockAST* FuncBody;
+        CompoundStmt* FuncBody;
     public:
-        Func(FuncProtoType* f, BlockAST* b);
+        Func(FuncProtoType* f, CompoundStmt* b);
         ~Func();
-        virtual void codegen(BlockAST* block);
-        std::string getName();
-        virtual std::string Info();
-        virtual void Accept(Visitor* v);
 };
 
-class IfStmt: Stmt {
-    Expr* Cond;
-    BlockAST* Then;
-    BlockAST* Else;
+class IfStmt:public Stmt {
+    Stmt* Cond;
+    CompoundStmt* Then;
+    CompoundStmt* Else;
     public:
-    IfStmt(Expr* Cond, BlockAST* Then, BlockAST* Else);
+    IfStmt(Stmt* Cond, CompoundStmt* Then, CompoundStmt* Else);
     ~IfStmt();
-    virtual void codegen(BlockAST* block);
 };
 #endif // _STMT_H_

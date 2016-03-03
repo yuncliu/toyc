@@ -1,68 +1,63 @@
 #ifndef __EXPR_H_
 #define __EXPR_H_
-class BlockAST;
-class FuncCallArgs;
-class Expr {
+#include "Stmt.h"
+class IdExpr: public Stmt{
+    friend Visitor;
+    std::string Id;
     public:
-        Expr();
-        virtual ~Expr();
-        virtual Value* codegen(BlockAST* block);
+    IdExpr(std::string id);
+    virtual ~IdExpr();
 };
 
-class IdExpr:public Expr{
-        std::string      name;
+class TypeExpr: public Stmt {
+    friend Visitor;
+    std::string Type;
     public:
-        IdExpr(std::string s);
-        virtual ~IdExpr();
-        Value* codegen(BlockAST* block);
-        std::string getName();
+    TypeExpr(std::string type);
+    ~TypeExpr();
 };
 
-class IntExpr: Expr {
-        int value;
+class IntExpr: public Stmt {
+    friend Visitor;
+    int value;
     public:
-        IntExpr(int i);
-        ~IntExpr();
-        Value* codegen(BlockAST* block);
+    IntExpr(int i);
+    ~IntExpr();
 };
 
-class DoubleExpr: Expr {
-        double value;
+class DoubleExpr: public Stmt {
+    friend Visitor;
+    double value;
     public:
-        DoubleExpr(double d);
-        ~DoubleExpr();
-        Value* codegen(BlockAST* block);
+    DoubleExpr(double d);
+    ~DoubleExpr();
 };
 
-class VarExpr: Expr {
-        Type* type;
-        IdExpr* Id;
-    public:
-        VarExpr(Type* ty, IdExpr* id);
-        ~VarExpr();
-        Value* codegen(BlockAST* block);
-        Type* getType();
-        std::string getName();
-        std::string Info();
-};
-
-class FuncCallExpr: Expr {
+class VarExpr: public Stmt {
+    friend Visitor;
+    TypeExpr* Type;
     IdExpr* Id;
-    FuncCallArgs* Args;
     public:
-        FuncCallExpr(IdExpr* id, FuncCallArgs* args);
-        ~FuncCallExpr();
-        Value* codegen(BlockAST* block);
+    VarExpr(TypeExpr* ty, IdExpr* id);
+    ~VarExpr();
 };
 
-class BinaryExpr {
-        char op;
-        Expr* left;
-        Expr* right;
+class FuncCallExpr: public Stmt {
+    friend Visitor;
+    IdExpr* Id;
+    FuncCallParams* Args;
     public:
-        BinaryExpr(char op, Expr* l, Expr* r);
-        virtual ~BinaryExpr();
-        virtual Value* codegen(BlockAST* block);
+    FuncCallExpr(IdExpr* id, FuncCallParams* args);
+    ~FuncCallExpr();
+};
+
+class BinaryExpr:public Stmt {
+    char op;
+    Stmt* left;
+    Stmt* right;
+    public:
+    BinaryExpr(char op, Stmt* l, Stmt* r);
+    virtual ~BinaryExpr();
 };
 
 #endif
