@@ -37,8 +37,20 @@ bool DumpVisitor::Visit(Stmt* s) {
     is_last = false;
     return (this->*visit_func)(s);
 }
-
+/**
+ *print out prefix,
+ *ConmpoundStmt:
+ *`-Function: name [main] return type [int]   prefix="`-"
+ *  |-FunctionProtoType                       prefix="  |-"
+ *  | |-ID:[main]                             prefix="  | |-"
+ *  | |-TypeExpr: [int]
+ *  | `-No Parameters
+ *  `-ConmpoundStmt:
+ *    `-ReturnStmt:
+ *      `-IntExpr Value = [0]
+ */
 void DumpVisitor::print_prefix() {
+    printf(COLOR_BLUE); //Blue
     int size = prefix.size();
     for (int i = 0; i < size; ++i) {
         std::string t = prefix[i];
@@ -51,11 +63,12 @@ void DumpVisitor::print_prefix() {
         }
         printf("%s", t.c_str());
     }
+    printf(COLOR_RESET);
 }
 
 bool DumpVisitor::VisitCompoundStmt(Stmt* stmt) {
     CompoundStmt* p = (CompoundStmt*)stmt;
-    printf("ConmpoundStmt:\n");
+    printf("%sConmpoundStmt:%s\n", LIGHT_GREEN, COLOR_RESET);
     this->prefix.push_back("|-");
     int size = p->stmts.size();
     for (int i = 0; i < size; ++i) {
@@ -70,7 +83,7 @@ bool DumpVisitor::VisitCompoundStmt(Stmt* stmt) {
 
 bool DumpVisitor::VisitFunc(Stmt* stmt) {
     Func* f = (Func*)stmt;
-    printf("Function: name [%s] return type [%s]\n",
+    printf("%sFunction%s: name [%s] return type [%s]\n",LIGHT_GREEN, COLOR_RESET,
             f->ProtoType->Id->Id.c_str(),
             f->ProtoType->ReturnTy->Type.c_str());
     this->prefix.push_back("|-");
@@ -82,7 +95,7 @@ bool DumpVisitor::VisitFunc(Stmt* stmt) {
 }
 
 bool DumpVisitor::VisitFuncProtoType(Stmt* stmt) {
-    printf("FunctionProtoType\n");
+    printf("%sFunctionProtoType%s\n", LIGHT_GREEN, COLOR_RESET);
     FuncProtoType* f = (FuncProtoType*)stmt;
     this->prefix.push_back("|-");
     this->Visit(f->Id);

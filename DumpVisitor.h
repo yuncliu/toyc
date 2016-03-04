@@ -3,6 +3,9 @@
 #include <map>
 #include <vector>
 #include "Visitor.h"
+#define LIGHT_GREEN "\x1B[0;1;32m"
+#define COLOR_BLUE "\x1B[34m"
+#define COLOR_RESET "\033[0m"
 class DumpVisitor;
 class Stmt;
 typedef bool (DumpVisitor::*VISIT_FUNC)(Stmt* s);
