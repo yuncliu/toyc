@@ -14,6 +14,7 @@ using namespace std;
 int yylex (void);
 void yyerror (char const *);
 extern char* yytext;
+extern Stmt* root;
 %}
 
 %union {
@@ -44,9 +45,7 @@ extern char* yytext;
 %%
 program:
     stmt_list {
-        Visitor* v = (Visitor*)new DumpVisitor();
-        //Visitor* v = new Visitor();
-        $1->Accept(v);
+        root = $1;
     }
 ;
 
