@@ -166,5 +166,52 @@ Value* LLVMVisitor::CodeGenForCompoundStmt(Stmt* stmt) {
 
 Value* LLVMVisitor::CodeGenForStmt(Stmt* stmt) {
     printf("Code gen for [%s]\n", stmt->getSelfName().c_str());
+    if (stmt->getSelfName() == "ReturnStmt") {
+        return this->CodeGenForReturnStmt(stmt);
+    }
+    if (stmt->getSelfName() == "BinaryExpr") {
+        return this->CodeGenForBinaryExpr(stmt);
+    }
+    if (stmt->getSelfName() == "IdExpr") {
+        return this->CodeGenForIdExpr(stmt);
+    }
+    if (stmt->getSelfName() == "IntExpr") {
+        return this->CodeGenForIntExpr(stmt);
+    }
+    if (stmt->getSelfName() == "VarExpr") {
+        return this->CodeGenForVarExpr(stmt);
+    }
     return NULL;
+}
+
+Value* LLVMVisitor::CodeGenForReturnStmt(Stmt* stmt) {
+    ReturnStmt* p = static_cast<ReturnStmt*>(stmt);
+    Value* retval = CodeGenForStmt(p->Ret);
+    this->builder->CreateRet(retval);
+    return NULL;
+}
+
+Value* LLVMVisitor::CodeGenForBinaryExpr(Stmt* stmt) {
+    BinaryExpr* p = (BinaryExpr*)stmt;
+    printf("BinaryExpr: [%c]\n", p->op);
+    Value* l = this->CodeGenForStmt(p->left);
+    Value* r = this->CodeGenForStmt(p->right);
+    return this->builder->CreateAdd(l,r);
+}
+
+Value* LLVMVisitor::CodeGenForIdExpr(Stmt* stmt) {
+    return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 1, true);
+}
+Value* LLVMVisitor::CodeGenForIntExpr(Stmt* stmt) {
+    IntExpr* p = static_cast<IntExpr*>(stmt);
+    return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), p->value, true);
+}
+
+Value* LLVMVisitor::CodeGenForVarExpr(Stmt* stmt) {
+    // TODO: add symbol table
+    VarExpr* p = (VarExpr*)stmt;
+    //printf("VarExpr: Type[%s] Id[%s]\n", p->Type->Type.c_str(), p->Id->Id.c_str());
+    AllocaInst* Var = builder->CreateAlloca(CodeGenForTypeExpr(p->Type));
+    Var->setName(p->Id->Id);
+    return Var;
 }

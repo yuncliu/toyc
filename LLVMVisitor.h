@@ -39,8 +39,13 @@ class LLVMVisitor:public Visitor {
     std::vector<Type*> CodeGenForFuncParams(Stmt* stmt);
     bool VisitVarExpr(Stmt* stmt);
     bool VisitBinaryExpr(Stmt* stmt);
+    Value* CodeGenForBinaryExpr(Stmt* stmt);
     bool VisitReturnStmt(Stmt* stmt);
+    Value* CodeGenForReturnStmt(Stmt* stmt);
     bool VisitIntExpr(Stmt* stmt);
+    Value* CodeGenForIdExpr(Stmt* stmt);
+    Value* CodeGenForIntExpr(Stmt* stmt);
+    Value* CodeGenForVarExpr(Stmt* stmt);
 };
 
 #endif // _VISITOR_H_
