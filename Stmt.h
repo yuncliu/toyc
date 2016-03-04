@@ -7,8 +7,7 @@ class IdExpr;
 class TypeExpr;
 
 class Stmt {
-        friend Visitor;
-    protected:
+    public:
         std::string Name;
     public:
         Stmt(std::string name);
@@ -18,15 +17,15 @@ class Stmt {
 };
 
 class ReturnStmt: public Stmt {
-    friend Visitor;
-    Stmt* Ret;
+    public:
+        Stmt* Ret;
     public:
         ReturnStmt(Stmt* ret);
         ~ReturnStmt();
 };
 
 class CompoundStmt:public Stmt {
-        friend Visitor;
+    public:
         std::vector<Stmt*> stmts;
     public:
         CompoundStmt();
@@ -35,7 +34,7 @@ class CompoundStmt:public Stmt {
 };
 
 class FuncParameter: public Stmt {
-        friend Visitor;
+    public:
         std::vector<Stmt*>  Params;
     public:
         FuncParameter();
@@ -44,7 +43,7 @@ class FuncParameter: public Stmt {
 };
 
 class FuncProtoType: public Stmt {
-        friend Visitor;
+    public:
         IdExpr* Id;
         TypeExpr* ReturnTy;
         FuncParameter* Param;
@@ -54,16 +53,16 @@ class FuncProtoType: public Stmt {
 };
 
 class FuncCallParams: public Stmt {
-    friend Visitor;
-    std::vector<Stmt*> Parameters;
     public:
-    FuncCallParams();
-    ~FuncCallParams();
-    void pushParam(Stmt* parm);
+        std::vector<Stmt*> Parameters;
+    public:
+        FuncCallParams();
+        ~FuncCallParams();
+        void pushParam(Stmt* parm);
 };
 
 class Func:public Stmt {
-        friend Visitor;
+    public:
         FuncProtoType* ProtoType;
         CompoundStmt* FuncBody;
     public:
@@ -72,11 +71,12 @@ class Func:public Stmt {
 };
 
 class IfStmt:public Stmt {
-    Stmt* Cond;
-    CompoundStmt* Then;
-    CompoundStmt* Else;
     public:
-    IfStmt(Stmt* Cond, CompoundStmt* Then, CompoundStmt* Else);
-    ~IfStmt();
+        Stmt* Cond;
+        CompoundStmt* Then;
+        CompoundStmt* Else;
+    public:
+        IfStmt(Stmt* Cond, CompoundStmt* Then, CompoundStmt* Else);
+        ~IfStmt();
 };
 #endif // _STMT_H_

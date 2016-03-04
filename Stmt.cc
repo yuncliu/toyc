@@ -15,7 +15,7 @@ Stmt::~Stmt() {
 }
 
 void Stmt::Accept(Visitor* v) {
-    v->Travel(this);
+    v->Visit(this);
 }
 
 std::string Stmt::getSelfName() {
