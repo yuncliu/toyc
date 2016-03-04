@@ -3,7 +3,7 @@
 #include "Expr.h"
 #include "Stmt.h"
 
-DumpVisitor::DumpVisitor():indent(0) {
+DumpVisitor::DumpVisitor():is_last(false) {
     functions.insert(std::pair<std::string, VISIT_FUNC>("CompoundStmt", &DumpVisitor::VisitCompoundStmt));
     functions.insert(std::pair<std::string, VISIT_FUNC>("Func", &DumpVisitor::VisitFunc));
     functions.insert(std::pair<std::string, VISIT_FUNC>("FuncProtoType", &DumpVisitor::VisitFuncProtoType));
@@ -33,24 +33,38 @@ bool DumpVisitor::Visit(Stmt* s) {
         printf("No visit function for [%s]\n", s->getSelfName().c_str());
         return false;
     }
-    print_indent();
+    print_prefix();
+    is_last = false;
     return (this->*visit_func)(s);
 }
 
-void DumpVisitor::print_indent() {
-    for (int i = 0; i < this->indent; ++i) {
-        printf("  ");
+void DumpVisitor::print_prefix() {
+    int size = prefix.size();
+    for (int i = 0; i < size; ++i) {
+        std::string t = prefix[i];
+        if (t == "|-" && i != size-1) {
+            t = "| ";
+        }
+        if (is_last && i == size-1) {
+            t = "`-";
+            prefix[i] = "  ";
+        }
+        printf("%s", t.c_str());
     }
 }
 
 bool DumpVisitor::VisitCompoundStmt(Stmt* stmt) {
     CompoundStmt* p = (CompoundStmt*)stmt;
     printf("ConmpoundStmt:\n");
-    this->indent++;
-    for (auto it: p->stmts) {
-        this->Visit(it);
+    this->prefix.push_back("|-");
+    int size = p->stmts.size();
+    for (int i = 0; i < size; ++i) {
+        if (i == size - 1) {
+            is_last = true;
+        }
+        this->Visit(p->stmts[i]);
     }
-    this->indent--;
+    this->prefix.pop_back();
     return true;
 }
 
@@ -59,23 +73,26 @@ bool DumpVisitor::VisitFunc(Stmt* stmt) {
     printf("Function: name [%s] return type [%s]\n",
             f->ProtoType->Id->Id.c_str(),
             f->ProtoType->ReturnTy->Type.c_str());
-    this->indent++;
+    this->prefix.push_back("|-");
     this->Visit(f->ProtoType);
+    is_last = true;
     this->Visit(f->FuncBody);
-    this->indent--;
+    this->prefix.pop_back();
     return true;
 }
 
 bool DumpVisitor::VisitFuncProtoType(Stmt* stmt) {
     printf("FunctionProtoType\n");
     FuncProtoType* f = (FuncProtoType*)stmt;
-    this->indent++;
+    this->prefix.push_back("|-");
     this->Visit(f->Id);
     this->Visit(f->ReturnTy);
+    is_last = true;;
     this->Visit(f->Param);
-    this->indent--;
+    this->prefix.pop_back();
     return true;
 }
+
 bool DumpVisitor::VisitIdExpr(Stmt* stmt) {
     IdExpr* p = static_cast<IdExpr*>(stmt);
     printf("ID:[%s]\n", p->Id.c_str());
@@ -95,40 +112,44 @@ bool DumpVisitor::VisitFuncParameter(Stmt* stmt) {
         return true;
     }
     printf("FuncParameter\n");
-    this->indent++;
-    for (auto it: p->Params) {
-        this->Visit(it);
+    this->prefix.push_back("|-");
+    int size = p->Params.size();
+    for (int i = 0; i < size; ++i) {
+        if (i == size - 1) {
+            is_last = true;
+        }
+        this->Visit(p->Params[i]);
     }
-    this->indent--;
+    this->prefix.pop_back();
     return true;
 }
 
 bool DumpVisitor::VisitVarExpr(Stmt* stmt) {
     VarExpr* p = (VarExpr*)stmt;
     printf("VarExpr: Type[%s] Id[%s]\n", p->Type->Type.c_str(), p->Id->Id.c_str());
-    //this->indent++;
     //this->Visit(p->Type);
     //this->Visit(p->Id);
-    //this->indent--;
     return true;
 }
 
 bool DumpVisitor::VisitBinaryExpr(Stmt* stmt) {
     BinaryExpr* p = (BinaryExpr*)stmt;
     printf("BinaryExpr: [%c]\n", p->op);
-    this->indent++;
+    this->prefix.push_back("|-");
     this->Visit(p->left);
+    is_last = true;
     this->Visit(p->right);
-    this->indent--;
+    this->prefix.pop_back();
     return true;
 }
 
 bool DumpVisitor::VisitReturnStmt(Stmt* stmt) {
     ReturnStmt* p = static_cast<ReturnStmt*>(stmt);
     printf("ReturnStmt:\n");
-    this->indent++;
+    this->prefix.push_back("|-");
+    is_last = true;
     this->Visit(p->Ret);
-    this->indent--;
+    this->prefix.pop_back();
     return true;
 }
 
