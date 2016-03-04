@@ -8,27 +8,28 @@ class FuncProtoType;
 class CompoundStmt;
 class VarExpr;
 class Visitor;
-typedef void (Visitor::*VISIT_FUNC)(Stmt* s);
+typedef bool (Visitor::*TRAVEL_FUNC)(Stmt* s);
 
 class Visitor {
-    std::map<std::string, VISIT_FUNC> functions;
+    protected:
+    std::map<std::string, TRAVEL_FUNC> functions;
     public:
         int indent;
         Visitor();
         virtual ~Visitor();
-        VISIT_FUNC getFunction(std::string name);
-        void Visit(Stmt*);
-        void print_indent();
-        void VisitCompoundStmt(Stmt* stmt);
-        void VisitFunc(Stmt* stmt);
-        void VisitFuncProtoType(Stmt* stmt);
-        void VisitIdExpr(Stmt* stmt);
-        void VisitTypeExpr(Stmt* stmt);
-        void VisitFuncParameter(Stmt* stmt);
-        void VisitVarExpr(Stmt* stmt);
-        void VisitBinaryExpr(Stmt* stmt);
-        void VisitReturnStmt(Stmt* stmt);
-        void VisitIntExpr(Stmt* stmt);
+        TRAVEL_FUNC getFunction(std::string name);
+        bool Travel(Stmt*);
+        bool TravelCompoundStmt(Stmt* stmt);
+        bool TravelFunc(Stmt* stmt);
+        bool TravelFuncProtoType(Stmt* stmt);
+        bool TravelIdExpr(Stmt* stmt);
+        bool TravelTypeExpr(Stmt* stmt);
+        bool TravelFuncParameter(Stmt* stmt);
+        bool TravelVarExpr(Stmt* stmt);
+        bool TravelBinaryExpr(Stmt* stmt);
+        bool TravelReturnStmt(Stmt* stmt);
+        bool TravelIntExpr(Stmt* stmt);
+        virtual bool Visit(Stmt*);
 };
 
 #endif // _VISITOR_H_

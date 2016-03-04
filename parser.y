@@ -8,6 +8,7 @@
 #include "ast.h"
 #include "Expr.h"
 #include "Stmt.h"
+#include "DumpVisitor.h"
 #include "Visitor.h"
 using namespace std;
 int yylex (void);
@@ -43,7 +44,8 @@ extern char* yytext;
 %%
 program:
     stmt_list {
-        Visitor* v = new Visitor();
+        Visitor* v = (Visitor*)new DumpVisitor();
+        //Visitor* v = new Visitor();
         $1->Accept(v);
     }
 ;

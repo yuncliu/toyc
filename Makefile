@@ -12,6 +12,7 @@ EXEOBJS	= lex.o \
 		  Expr.o \
 		  Stmt.o \
 		  Visitor.o \
+		  DumpVisitor.o \
 		  main.o
 
 LEX_CC		= lex.cc

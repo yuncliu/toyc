@@ -4,116 +4,117 @@
 #include "Stmt.h"
 
 Visitor::Visitor():indent(0) {
-    functions.insert(std::pair<std::string, VISIT_FUNC>("CompoundStmt", &Visitor::VisitCompoundStmt));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("Func", &Visitor::VisitFunc));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("FuncProtoType", &Visitor::VisitFuncProtoType));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("IdExpr", &Visitor::VisitIdExpr));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("TypeExpr", &Visitor::VisitTypeExpr));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("FuncParameter", &Visitor::VisitFuncParameter));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("VarExpr", &Visitor::VisitVarExpr));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("BinaryExpr", &Visitor::VisitBinaryExpr));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("ReturnStmt", &Visitor::VisitReturnStmt));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("IntExpr", &Visitor::VisitIntExpr));
+    functions.insert(std::pair<std::string, TRAVEL_FUNC>("CompoundStmt", &Visitor::TravelCompoundStmt));
+    functions.insert(std::pair<std::string, TRAVEL_FUNC>("Func", &Visitor::TravelFunc));
+    functions.insert(std::pair<std::string, TRAVEL_FUNC>("FuncProtoType", &Visitor::TravelFuncProtoType));
+    functions.insert(std::pair<std::string, TRAVEL_FUNC>("IdExpr", &Visitor::TravelIdExpr));
+    functions.insert(std::pair<std::string, TRAVEL_FUNC>("TypeExpr", &Visitor::TravelTypeExpr));
+    functions.insert(std::pair<std::string, TRAVEL_FUNC>("FuncParameter", &Visitor::TravelFuncParameter));
+    functions.insert(std::pair<std::string, TRAVEL_FUNC>("VarExpr", &Visitor::TravelVarExpr));
+    functions.insert(std::pair<std::string, TRAVEL_FUNC>("BinaryExpr", &Visitor::TravelBinaryExpr));
+    functions.insert(std::pair<std::string, TRAVEL_FUNC>("ReturnStmt", &Visitor::TravelReturnStmt));
+    functions.insert(std::pair<std::string, TRAVEL_FUNC>("IntExpr", &Visitor::TravelIntExpr));
 }
 
 Visitor::~Visitor() {
 }
 
-VISIT_FUNC Visitor::getFunction(std::string name) {
-    std::map<std::string, VISIT_FUNC>::iterator it = functions.find(name);
+TRAVEL_FUNC Visitor::getFunction(std::string name) {
+    std::map<std::string, TRAVEL_FUNC>::iterator it = functions.find(name);
     if (it == functions.end() ){
         return NULL;
     }
     return it->second;
 }
-void Visitor::Visit(Stmt* s) {
-    VISIT_FUNC func = this->getFunction(s->getSelfName());
-    if (NULL == func) {
+
+bool Visitor::Travel(Stmt* s) {
+    TRAVEL_FUNC travel_func = this->getFunction(s->getSelfName());
+    if (NULL == travel_func) {
         printf("No visit function for [%s]\n", s->getSelfName().c_str());
-        return;
+        return false;
     }
-    print_indent();
-    (this->*func)(s);
+    if (this->Visit(s)) {
+        return (this->*travel_func)(s);
+    }
+    return true;
 }
 
-void Visitor::print_indent() {
-    for (int i = 0; i < this->indent; ++i) {
-        printf("  ");
-    }
-}
-
-void Visitor::VisitCompoundStmt(Stmt* stmt) {
+bool Visitor::TravelCompoundStmt(Stmt* stmt) {
     CompoundStmt* p = (CompoundStmt*)stmt;
-    printf("%s\n", "CompoundStmt");
     this->indent++;
     for (auto it: p->stmts) {
-        this->Visit(it);
+        this->Travel(it);
     }
     this->indent--;
+    return true;
 }
 
-void Visitor::VisitFunc(Stmt* stmt) {
+bool Visitor::TravelFunc(Stmt* stmt) {
     Func* f = (Func*)stmt;
-    printf("%s\n", "Function");
     this->indent++;
-    this->Visit(f->ProtoType);
-    this->Visit(f->FuncBody);
+    this->Travel(f->ProtoType);
+    this->Travel(f->FuncBody);
     this->indent--;
+    return true;
 }
-void Visitor::VisitFuncProtoType(Stmt* stmt) {
+
+bool Visitor::TravelFuncProtoType(Stmt* stmt) {
     FuncProtoType* f = (FuncProtoType*)stmt;
-    printf("%s\n", "FunctionProtoType");
     this->indent++;
-    this->Visit(f->Id);
-    this->Visit(f->ReturnTy);
-    this->Visit(f->Param);
+    this->Travel(f->Id);
+    this->Travel(f->ReturnTy);
+    this->Travel(f->Param);
     this->indent--;
+    return true;
 }
-void Visitor::VisitIdExpr(Stmt* stmt) {
-    IdExpr* p = (IdExpr*)stmt;
-    printf("IdExpr[%s]\n", p->Id.c_str());
-}
-
-void Visitor::VisitTypeExpr(Stmt* stmt) {
-    TypeExpr* p = (TypeExpr*)stmt;
-    printf("[%d]TypeExpr[%s]\n", this->indent, p->Type.c_str());
+bool Visitor::TravelIdExpr(Stmt* stmt) {
+    return true;
 }
 
-void Visitor::VisitFuncParameter(Stmt* stmt) {
+bool Visitor::TravelTypeExpr(Stmt* stmt) {
+    return true;
+}
+
+bool Visitor::TravelFuncParameter(Stmt* stmt) {
     FuncParameter* p = (FuncParameter*)stmt;
-    printf("FuncParameters\n");
     this->indent++;
     for (auto it: p->Params) {
-        this->Visit(it);
+        this->Travel(it);
     }
     this->indent--;
-}
-void Visitor::VisitVarExpr(Stmt* stmt) {
-    VarExpr* p = (VarExpr*)stmt;
-    printf("Variable\n");
-    this->indent++;
-    this->Visit(p->Type);
-    this->Visit(p->Id);
-    this->indent--;
+    return true;
 }
 
-void Visitor::VisitBinaryExpr(Stmt* stmt) {
+bool Visitor::TravelVarExpr(Stmt* stmt) {
+    VarExpr* p = (VarExpr*)stmt;
+    this->indent++;
+    this->Travel(p->Type);
+    this->Travel(p->Id);
+    this->indent--;
+    return true;
+}
+
+bool Visitor::TravelBinaryExpr(Stmt* stmt) {
     BinaryExpr* p = (BinaryExpr*)stmt;
     this->indent++;
-    printf("BinaryExpr: operator[%c]\n", p->op);
-    this->Visit(p->left);
-    this->Visit(p->right);
+    this->Travel(p->left);
+    this->Travel(p->right);
     this->indent--;
-}
-void Visitor::VisitReturnStmt(Stmt* stmt) {
-    ReturnStmt* p = (ReturnStmt*)stmt;
-    this->indent++;
-    printf("ReturnStmt\n");
-    this->Visit(p->Ret);
-    this->indent--;
+    return true;
 }
 
-void Visitor::VisitIntExpr(Stmt* stmt) {
-    IntExpr* p = (IntExpr*)stmt;
-    printf("IntExpr: [%d]\n", p->value);
+bool Visitor::TravelReturnStmt(Stmt* stmt) {
+    ReturnStmt* p = (ReturnStmt*)stmt;
+    this->indent++;
+    this->Travel(p->Ret);
+    this->indent--;
+    return true;
+}
+
+bool Visitor::TravelIntExpr(Stmt* stmt) {
+    return true;
+}
+
+bool Visitor::Visit(Stmt* stmt) {
+    return true;
 }
