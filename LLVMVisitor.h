@@ -18,6 +18,7 @@ using namespace llvm;
 class LLVMVisitor:public Visitor {
     typedef bool (LLVMVisitor::*VISIT_FUNC)(Stmt* s);
     std::map<std::string, VISIT_FUNC> functions;
+    std::map<std::string, Value*> NamedValue;
     Module* module;
     IRBuilder<>* builder;
     std::map<std::string, Value*> GlobalNamedValue;
@@ -37,6 +38,8 @@ class LLVMVisitor:public Visitor {
     bool VisitTypeExpr(Stmt* stmt);
     bool VisitFuncParameter(Stmt* stmt);
     std::vector<Type*> CodeGenForFuncParams(Stmt* stmt);
+    //std::vector<Type*> GetTypeVecForFuncParams(Stmt* stmt);
+    //std::vector<string> GetNameVecForFuncParams(Stmt* stmt);
     bool VisitVarExpr(Stmt* stmt);
     bool VisitBinaryExpr(Stmt* stmt);
     Value* CodeGenForBinaryExpr(Stmt* stmt);

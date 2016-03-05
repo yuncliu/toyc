@@ -54,6 +54,13 @@ bool LLVMVisitor::VisitFunc(Stmt* stmt) {
     BasicBlock *block = BasicBlock::Create(getGlobalContext(), "entry", func);
     builder->SetInsertPoint(block);
     //this->Visit(f->FuncBody);
+    unsigned i = 0;
+    Function::arg_iterator it;
+    for (it = func->arg_begin(); it != func->arg_end(); ++it) {
+        Value* v = CodeGenForVarExpr(f->ProtoType->Param->Params[i]);
+        builder->CreateStore(&*it, v);
+        i++;
+    }
     this->CodeGenForCompoundStmt(f->FuncBody);
     return true;
 }
@@ -135,6 +142,10 @@ Function* LLVMVisitor::CodeGenForFuncProtoType(Stmt* stmt) {
             p->Id->Id,
             module);
 
+    for (auto it:p->Param->Params) {
+        printf("----------[%s]\n", it->getSelfName().c_str());
+    }
+
     return fun;
 }
 
@@ -150,8 +161,12 @@ Type* LLVMVisitor::CodeGenForTypeExpr(Stmt* stmt) {
 }
 
 std::vector<Type*> LLVMVisitor::CodeGenForFuncParams(Stmt* stmt) {
-    //FuncParameter* p = (FuncParameter*)stmt;
+    FuncParameter* p = static_cast<FuncParameter*>(stmt);
     std::vector<Type*> v;
+    for (auto it: p->Params) {
+        VarExpr* pp = static_cast<VarExpr*>(it);
+        v.push_back(CodeGenForTypeExpr(pp->Type));
+    }
     return v;
 }
 
@@ -193,25 +208,44 @@ Value* LLVMVisitor::CodeGenForReturnStmt(Stmt* stmt) {
 
 Value* LLVMVisitor::CodeGenForBinaryExpr(Stmt* stmt) {
     BinaryExpr* p = (BinaryExpr*)stmt;
-    printf("BinaryExpr: [%c]\n", p->op);
     Value* l = this->CodeGenForStmt(p->left);
     Value* r = this->CodeGenForStmt(p->right);
+    printf("BinaryExpr: [%c]\n", p->op);
+    switch(p->op) {
+        case '+':
+            return this->builder->CreateAdd(l,r);
+            break;
+        case '=':
+            return this->builder->CreateStore(r,l);
+            break;
+        default:
+            break;
+    }
     return this->builder->CreateAdd(l,r);
 }
 
 Value* LLVMVisitor::CodeGenForIdExpr(Stmt* stmt) {
-    return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 1, true);
+    IdExpr* p = static_cast<IdExpr*>(stmt);
+    std::map<std::string, Value*>::iterator it = NamedValue.find(p->Id);
+    if (it == NamedValue.end()) {
+        return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0, true);
+    }
+    // TODO: distinguish right value and left value
+    return builder->CreateLoad(it->second);
 }
+
 Value* LLVMVisitor::CodeGenForIntExpr(Stmt* stmt) {
     IntExpr* p = static_cast<IntExpr*>(stmt);
     return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), p->value, true);
 }
 
 Value* LLVMVisitor::CodeGenForVarExpr(Stmt* stmt) {
+    printf("----------------------------------------------------\n");
     // TODO: add symbol table
     VarExpr* p = (VarExpr*)stmt;
     //printf("VarExpr: Type[%s] Id[%s]\n", p->Type->Type.c_str(), p->Id->Id.c_str());
     AllocaInst* Var = builder->CreateAlloca(CodeGenForTypeExpr(p->Type));
     Var->setName(p->Id->Id);
+    NamedValue.insert(std::pair<std::string, Value*>(p->Id->Id, Var));
     return Var;
 }
