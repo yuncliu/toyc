@@ -1,7 +1,6 @@
 %{
 #include <stdlib.h>
 
-#include "ast.h"
 #include "Expr.h"
 #include "Stmt.h"
 #include "parser.h"

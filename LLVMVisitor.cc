@@ -1,5 +1,4 @@
 #include "LLVMVisitor.h"
-#include "ast.h"
 #include "Expr.h"
 #include "Stmt.h"
 #include "llvm/IR/ValueSymbolTable.h"

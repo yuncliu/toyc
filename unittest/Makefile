@@ -8,7 +8,6 @@ LINKS	=  -lstdc++ -lgtest -lpthread -lm \
 
 CCOBJS	=../lex.o \
 		../parser.o \
-		../ast.o \
 		../Visitor.o \
 		../LLVMVisitor.o \
 		../Stmt.o \
@@ -22,8 +21,7 @@ VPATH		 = ./
 
 INC=-I.\
 	-I.. \
-	-I../googletest/googletest/include \
-	-I/usr/lib/llvm-3.7/include
+	-I../googletest/googletest/include
 
 
 LIB=-L. \

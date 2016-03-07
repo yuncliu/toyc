@@ -1,6 +1,7 @@
 #ifndef _STMT_H_
 #define _STMT_H_
 #include <string>
+#include <vector>
 class CompoundStmt;
 class Visitor;
 class IdExpr;
