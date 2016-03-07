@@ -2,56 +2,34 @@
 #include "ast.h"
 #include "Expr.h"
 #include "Stmt.h"
+#include "llvm/IR/ValueSymbolTable.h"
 
 LLVMVisitor::LLVMVisitor() {
-    functions.insert(std::pair<std::string, VISIT_FUNC>("CompoundStmt", &LLVMVisitor::VisitCompoundStmt));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("Func", &LLVMVisitor::VisitFunc));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("FuncProtoType", &LLVMVisitor::VisitFuncProtoType));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("IdExpr", &LLVMVisitor::VisitIdExpr));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("TypeExpr", &LLVMVisitor::VisitTypeExpr));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("FuncParameter", &LLVMVisitor::VisitFuncParameter));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("VarExpr", &LLVMVisitor::VisitVarExpr));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("BinaryExpr", &LLVMVisitor::VisitBinaryExpr));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("ReturnStmt", &LLVMVisitor::VisitReturnStmt));
-    functions.insert(std::pair<std::string, VISIT_FUNC>("IntExpr", &LLVMVisitor::VisitIntExpr));
     module = new Module("main", getGlobalContext());
     builder = new IRBuilder<>(getGlobalContext());
+    CurrentFunction = NULL;
+    CurrentBlock = NULL;
 }
 
 LLVMVisitor::~LLVMVisitor() {
     this->module->dump();
 }
 
-LLVMVisitor::VISIT_FUNC LLVMVisitor::getFunction(std::string name) {
-    std::map<std::string, VISIT_FUNC>::iterator it = functions.find(name);
-    if (it == functions.end() ){
-        return NULL;
-    }
-    return it->second;
-}
-
 bool LLVMVisitor::Visit(Stmt* s) {
-    VISIT_FUNC visit_func = this->getFunction(s->getSelfName());
-    if (NULL == visit_func) {
-        printf("No visit function for [%s]\n", s->getSelfName().c_str());
-        return false;
-    }
-    return (this->*visit_func)(s);
-}
-
-bool LLVMVisitor::VisitCompoundStmt(Stmt* stmt) {
-    CompoundStmt* p = (CompoundStmt*)stmt;
-    int size = p->stmts.size();
-    for (int i = 0; i < size; ++i) {
-        this->Visit(p->stmts[i]);
-    }
+    CodeGenForStmt(s);
     return true;
 }
 
-bool LLVMVisitor::VisitFunc(Stmt* stmt) {
+Module* LLVMVisitor::getModule() {
+    return module;
+}
+
+Value* LLVMVisitor::CodeGenForFunc(Stmt* stmt) {
     Func* f = (Func*)stmt;
     Function* func = CodeGenForFuncProtoType(f->ProtoType);
-    BasicBlock *block = BasicBlock::Create(getGlobalContext(), "entry", func);
+    CurrentFunction = func;
+    BasicBlock* block = BasicBlock::Create(getGlobalContext(), "entry", func);
+    CurrentBlock = block;
     builder->SetInsertPoint(block);
     //this->Visit(f->FuncBody);
     unsigned i = 0;
@@ -62,74 +40,9 @@ bool LLVMVisitor::VisitFunc(Stmt* stmt) {
         i++;
     }
     this->CodeGenForCompoundStmt(f->FuncBody);
-    return true;
-}
-
-bool LLVMVisitor::VisitFuncProtoType(Stmt* stmt) {
-    FuncProtoType* f = (FuncProtoType*)stmt;
-    this->Visit(f->Id);
-    this->Visit(f->ReturnTy);
-    this->Visit(f->Param);
-    return true;
-}
-
-bool LLVMVisitor::VisitIdExpr(Stmt* stmt) {
-    IdExpr* p = static_cast<IdExpr*>(stmt);
-    printf("ID:[%s]\n", p->Id.c_str());
-    return true;
-}
-
-bool LLVMVisitor::VisitTypeExpr(Stmt* stmt) {
-    TypeExpr* p = static_cast<TypeExpr*>(stmt);
-    printf("TypeExpr: [%s]\n", p->Type.c_str());
-    return true;
-}
-
-bool LLVMVisitor::VisitFuncParameter(Stmt* stmt) {
-    FuncParameter* p = (FuncParameter*)stmt;
-    if (p->Params.size() == 0) {
-        printf("No Parameters\n");
-        return true;
-    }
-    printf("FuncParameter\n");
-    int size = p->Params.size();
-    for (int i = 0; i < size; ++i) {
-        this->Visit(p->Params[i]);
-    }
-    return true;
-}
-
-bool LLVMVisitor::VisitVarExpr(Stmt* stmt) {
-    VarExpr* p = (VarExpr*)stmt;
-    //printf("VarExpr: Type[%s] Id[%s]\n", p->Type->Type.c_str(), p->Id->Id.c_str());
-    this->Visit(p->Type);
-    this->Visit(p->Id);
-    GlobalVariable* v = new GlobalVariable(*module, Type::getInt32Ty(getGlobalContext()),
-            false, Function::InternalLinkage, NULL);
-    v->setName(p->Id->Id.c_str());
-    GlobalNamedValue.insert(std::pair<std::string, Value*>(p->Id->Id, v));
-    return true;
-}
-
-bool LLVMVisitor::VisitBinaryExpr(Stmt* stmt) {
-    BinaryExpr* p = (BinaryExpr*)stmt;
-    printf("BinaryExpr: [%c]\n", p->op);
-    this->Visit(p->left);
-    this->Visit(p->right);
-    return true;
-}
-
-bool LLVMVisitor::VisitReturnStmt(Stmt* stmt) {
-    ReturnStmt* p = static_cast<ReturnStmt*>(stmt);
-    printf("ReturnStmt:\n");
-    this->Visit(p->Ret);
-    return true;
-}
-
-bool LLVMVisitor::VisitIntExpr(Stmt* stmt) {
-    IntExpr* p = static_cast<IntExpr*>(stmt);
-    printf("IntExpr Value = [%d]\n", p->value);
-    return true;
+    CurrentBlock = NULL;
+    CurrentFunction = NULL;
+    return func;
 }
 
 Function* LLVMVisitor::CodeGenForFuncProtoType(Stmt* stmt) {
@@ -180,7 +93,9 @@ Value* LLVMVisitor::CodeGenForCompoundStmt(Stmt* stmt) {
 }
 
 Value* LLVMVisitor::CodeGenForStmt(Stmt* stmt) {
-    printf("Code gen for [%s]\n", stmt->getSelfName().c_str());
+    if (stmt->getSelfName() == "CompoundStmt") {
+        return this->CodeGenForCompoundStmt(stmt);
+    }
     if (stmt->getSelfName() == "ReturnStmt") {
         return this->CodeGenForReturnStmt(stmt);
     }
@@ -196,26 +111,45 @@ Value* LLVMVisitor::CodeGenForStmt(Stmt* stmt) {
     if (stmt->getSelfName() == "VarExpr") {
         return this->CodeGenForVarExpr(stmt);
     }
+    if (stmt->getSelfName() == "Func") {
+        return this->CodeGenForFunc(stmt);
+    }
+    if (stmt->getSelfName() == "FuncCallExpr") {
+        return this->CodeGenForFuncCallExpr(stmt);
+    }
     return NULL;
 }
 
 Value* LLVMVisitor::CodeGenForReturnStmt(Stmt* stmt) {
     ReturnStmt* p = static_cast<ReturnStmt*>(stmt);
-    Value* retval = CodeGenForStmt(p->Ret);
-    this->builder->CreateRet(retval);
-    return NULL;
+    Value* retval = GetRightValue(CodeGenForStmt(p->Ret));
+    return this->builder->CreateRet(retval);
 }
 
 Value* LLVMVisitor::CodeGenForBinaryExpr(Stmt* stmt) {
-    BinaryExpr* p = (BinaryExpr*)stmt;
+    BinaryExpr* p = static_cast<BinaryExpr*>(stmt);
     Value* l = this->CodeGenForStmt(p->left);
     Value* r = this->CodeGenForStmt(p->right);
-    printf("BinaryExpr: [%c]\n", p->op);
     switch(p->op) {
         case '+':
+            l = GetRightValue(l);
+            r = GetRightValue(r);
             return this->builder->CreateAdd(l,r);
             break;
+        case '-':
+            l = GetRightValue(l);
+            r = GetRightValue(r);
+            return this->builder->CreateSub(l,r);
+            break;
         case '=':
+            if (NULL == CurrentFunction) {
+                if (p->left->getSelfName() == "VarExpr") {
+                    static_cast<GlobalVariable*>(l)->setInitializer(static_cast<Constant*>(r));
+                    return NULL;
+                }
+            }
+            l = GetLeftValue(l);
+            r = GetRightValue(r);
             return this->builder->CreateStore(r,l);
             break;
         default:
@@ -226,12 +160,23 @@ Value* LLVMVisitor::CodeGenForBinaryExpr(Stmt* stmt) {
 
 Value* LLVMVisitor::CodeGenForIdExpr(Stmt* stmt) {
     IdExpr* p = static_cast<IdExpr*>(stmt);
-    std::map<std::string, Value*>::iterator it = NamedValue.find(p->Id);
-    if (it == NamedValue.end()) {
+    if (NULL == CurrentFunction) {
+        // if is not in function, must be a global value
+        return module->getNamedGlobal(p->Id);
+    }
+    ValueSymbolTable& vt =  CurrentFunction->getValueSymbolTable();
+    Value* v = vt.lookup(p->Id);
+    if (NULL == v) {
+        // if can't find in function's value table, then lookup in global variable table
+        GlobalVariable* g = module->getNamedGlobal(p->Id);
+        if (NULL != g) {
+            // find in global value table
+            return g;
+        }
+        printf("can't find identifier[%s]\n", p->Id.c_str());
         return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0, true);
     }
-    // TODO: distinguish right value and left value
-    return builder->CreateLoad(it->second);
+    return v;
 }
 
 Value* LLVMVisitor::CodeGenForIntExpr(Stmt* stmt) {
@@ -240,12 +185,45 @@ Value* LLVMVisitor::CodeGenForIntExpr(Stmt* stmt) {
 }
 
 Value* LLVMVisitor::CodeGenForVarExpr(Stmt* stmt) {
-    printf("----------------------------------------------------\n");
-    // TODO: add symbol table
     VarExpr* p = (VarExpr*)stmt;
-    //printf("VarExpr: Type[%s] Id[%s]\n", p->Type->Type.c_str(), p->Id->Id.c_str());
-    AllocaInst* Var = builder->CreateAlloca(CodeGenForTypeExpr(p->Type));
-    Var->setName(p->Id->Id);
-    NamedValue.insert(std::pair<std::string, Value*>(p->Id->Id, Var));
-    return Var;
+    if (NULL == CurrentFunction){
+        Type* ty = CodeGenForTypeExpr(p->Type);
+        GlobalVariable* global = new GlobalVariable(*module, ty,
+                false, Function::InternalLinkage, NULL);
+        global->setName(p->Id->Id);
+        Constant* initer = ConstantInt::get(ty, 0, true);
+        global->setInitializer(initer);
+        return global;
+    }
+    else {
+        AllocaInst* Var = builder->CreateAlloca(CodeGenForTypeExpr(p->Type));
+        Var->setName(p->Id->Id);
+        return Var;
+    }
+    return NULL;
+}
+
+Value* LLVMVisitor::GetLeftValue(Value* v) {
+    return v;
+}
+
+Value* LLVMVisitor::GetRightValue(Value* v) {
+    if (isa<AllocaInst>(v)) {
+        return builder->CreateLoad(v);
+    }
+    if (isa<GlobalVariable>(v)) {
+        return builder->CreateLoad(v);
+    }
+    return v;
+}
+
+Value* LLVMVisitor::CodeGenForFuncCallExpr(Stmt* stmt) {
+    FuncCallExpr* p = static_cast<FuncCallExpr*>(stmt);
+    Function* func = module->getFunction(p->Id->Id);
+    std::vector<Value*> args;
+    for(auto it : p->Args->Parameters) {
+        args.push_back(CodeGenForStmt(it));
+    }
+    CallInst *call = CallInst::Create(func, makeArrayRef(args), "", CurrentBlock);
+    return call;
 }

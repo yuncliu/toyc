@@ -10,6 +10,9 @@ CCOBJS	=../lex.o \
 		../parser.o \
 		../ast.o \
 		../Visitor.o \
+		../LLVMVisitor.o \
+		../Stmt.o \
+		../Expr.o \
 		ast_test.o \
 		main_test.o
 

@@ -16,39 +16,30 @@ class Stmt;
 using namespace llvm;
 
 class LLVMVisitor:public Visitor {
-    typedef bool (LLVMVisitor::*VISIT_FUNC)(Stmt* s);
-    std::map<std::string, VISIT_FUNC> functions;
-    std::map<std::string, Value*> NamedValue;
     Module* module;
     IRBuilder<>* builder;
     std::map<std::string, Value*> GlobalNamedValue;
+    Function* CurrentFunction;
+    BasicBlock* CurrentBlock;
     public:
     LLVMVisitor();
     virtual ~LLVMVisitor();
-    VISIT_FUNC getFunction(std::string name);
     virtual bool Visit(Stmt*);
+    Module* getModule();
     Value* CodeGenForStmt(Stmt* stmt);
-    bool VisitCompoundStmt(Stmt* stmt);
     Value* CodeGenForCompoundStmt(Stmt* stmt);
-    bool VisitFunc(Stmt* stmt);
+    Value* CodeGenForFunc(Stmt* stmt);
     Function* CodeGenForFuncProtoType(Stmt* stmt);
     Type* CodeGenForTypeExpr(Stmt* stmt);
-    bool VisitFuncProtoType(Stmt* stmt);
-    bool VisitIdExpr(Stmt* stmt);
-    bool VisitTypeExpr(Stmt* stmt);
-    bool VisitFuncParameter(Stmt* stmt);
     std::vector<Type*> CodeGenForFuncParams(Stmt* stmt);
-    //std::vector<Type*> GetTypeVecForFuncParams(Stmt* stmt);
-    //std::vector<string> GetNameVecForFuncParams(Stmt* stmt);
-    bool VisitVarExpr(Stmt* stmt);
-    bool VisitBinaryExpr(Stmt* stmt);
     Value* CodeGenForBinaryExpr(Stmt* stmt);
-    bool VisitReturnStmt(Stmt* stmt);
     Value* CodeGenForReturnStmt(Stmt* stmt);
-    bool VisitIntExpr(Stmt* stmt);
     Value* CodeGenForIdExpr(Stmt* stmt);
     Value* CodeGenForIntExpr(Stmt* stmt);
     Value* CodeGenForVarExpr(Stmt* stmt);
+    Value* GetLeftValue(Value* v);
+    Value* GetRightValue(Value* v);
+    Value* CodeGenForFuncCallExpr(Stmt* stmt);
 };
 
 #endif // _VISITOR_H_

@@ -1,26 +1,24 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/ExecutionEngine/Interpreter.h"
 #include "gtest/gtest.h"
-#include "ast.h"
+#include "Stmt.h"
+#include "Expr.h"
+#include "LLVMVisitor.h"
 #include "lex.h"
 #include "parser.h"
-Module* Single::m = NULL;
-IRBuilder<>* Single::b = NULL;
-std::map<std::string, Value*> Single::globalNamedValue;
-
+Stmt* root = NULL;
 class ASTTest: public testing::Test {
     protected:
         ExecutionEngine* EE;
+        LLVMVisitor* visitor;
         virtual void SetUp() {
-            Single::ReSet();
-            Single::getModule();
-            Single::getBuilder();
+            visitor = new LLVMVisitor();
             EE = NULL;
         }
 
         int exe() {
-            EE = EngineBuilder(std::unique_ptr<Module>(Single::getModule())).create();
-            Function* Func = Single::getModule()->getFunction("main");
+            EE = EngineBuilder(std::unique_ptr<Module>(visitor->getModule())).create();
+            Function* Func = visitor->getModule()->getFunction("main");
             std::vector<GenericValue> noargs;
             GenericValue gv = EE->runFunction(Func, noargs);
             printf("Return value is [%ld]\n", *(gv.IntVal.getRawData()));
@@ -32,6 +30,10 @@ class ASTTest: public testing::Test {
                 delete EE;
                 EE = NULL;
             }
+            if (NULL != visitor) {
+                delete visitor;
+                visitor = NULL;
+            }
         }
 };
 
@@ -42,7 +44,7 @@ TEST_F(ASTTest, return0) {
             return 10;\
             }");
     yyparse();
-    Single::getModule()->dump();
+    root->Accept(visitor);
     EXPECT_EQ(this->exe(), 10);
 }
 
@@ -52,7 +54,7 @@ TEST_F(ASTTest, return_variable) {
             return a;\
             }");
 yyparse();
-Single::getModule()->dump();
+root->Accept(visitor);
 EXPECT_EQ(this->exe(), 10);
 }
 
@@ -62,7 +64,8 @@ TEST_F(ASTTest, return_global_variable) {
             return a;\
             }");
     yyparse();
-    Single::getModule()->dump();
+    root->Accept(visitor);
+    visitor->getModule()->dump();
     EXPECT_EQ(this->exe(), 10);
 }
 
@@ -78,7 +81,7 @@ TEST_F(ASTTest, return_function) {
             }");
 
     yyparse();
-    Single::getModule()->dump();
+    root->Accept(visitor);
     EXPECT_EQ(this->exe(), 11);
 }
 
@@ -92,7 +95,7 @@ TEST_F(ASTTest, if_else) {
             }\
             }");
     yyparse();
-    Single::getModule()->dump();
+    root->Accept(visitor);
     EXPECT_EQ(this->exe(), 1);
 }
 
@@ -103,9 +106,9 @@ TEST_F(ASTTest, double2int) {
                 int b = a;\
                 return b;\
             }");
-            yyparse();
-            Single::getModule()->dump();
-            EXPECT_EQ(this->exe(), 10);
+    yyparse();
+    root->Accept(visitor);
+    EXPECT_EQ(this->exe(), 10);
 }
 
 TEST_F(ASTTest, int2double) {
@@ -116,7 +119,7 @@ TEST_F(ASTTest, int2double) {
                 int c = a;\
                 return c;\
             }");
-            yyparse();
-            Single::getModule()->dump();
-            EXPECT_EQ(this->exe(), 10);
+    yyparse();
+    root->Accept(visitor);
+    EXPECT_EQ(this->exe(), 10);
 }
