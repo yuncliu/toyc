@@ -11,6 +11,7 @@ LLVMVisitor::LLVMVisitor() {
 }
 
 LLVMVisitor::~LLVMVisitor() {
+    printf("LLVM IR:\n");
     this->module->dump();
 }
 
@@ -24,13 +25,13 @@ Module* LLVMVisitor::getModule() {
 }
 
 Value* LLVMVisitor::CodeGenForFunc(Stmt* stmt) {
-    Func* f = (Func*)stmt;
+    Func* f = static_cast<Func*>(stmt);
     Function* func = CodeGenForFuncProtoType(f->ProtoType);
     CurrentFunction = func;
     BasicBlock* block = BasicBlock::Create(getGlobalContext(), "entry", func);
     CurrentBlock = block;
     builder->SetInsertPoint(block);
-    //this->Visit(f->FuncBody);
+    // static to generate function body
     unsigned i = 0;
     Function::arg_iterator it;
     for (it = func->arg_begin(); it != func->arg_end(); ++it) {
@@ -53,11 +54,6 @@ Function* LLVMVisitor::CodeGenForFuncProtoType(Stmt* stmt) {
             Function::ExternalLinkage,
             p->Id->Id,
             module);
-
-    for (auto it:p->Param->Params) {
-        printf("----------[%s]\n", it->getSelfName().c_str());
-    }
-
     return fun;
 }
 
@@ -83,7 +79,7 @@ std::vector<Type*> LLVMVisitor::CodeGenForFuncParams(Stmt* stmt) {
 }
 
 Value* LLVMVisitor::CodeGenForCompoundStmt(Stmt* stmt) {
-    CompoundStmt* p = (CompoundStmt*)stmt;
+    CompoundStmt* p = static_cast<CompoundStmt*>(stmt);
     int size = p->stmts.size();
     for (int i = 0; i < size; ++i) {
         this->CodeGenForStmt(p->stmts[i]);
