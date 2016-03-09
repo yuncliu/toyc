@@ -35,29 +35,29 @@ class DoubleExpr: public Stmt {
 
 class VarExpr: public Stmt {
     public:
-        TypeExpr* Type;
-        IdExpr* Id;
+        std::shared_ptr<TypeExpr> Type;
+        std::shared_ptr<IdExpr> Id;
     public:
-        VarExpr(TypeExpr* ty, IdExpr* id);
+        VarExpr(std::shared_ptr<TypeExpr> ty, std::shared_ptr<IdExpr> id);
         ~VarExpr();
 };
 
 class FuncCallExpr: public Stmt {
     public:
-        IdExpr* Id;
-        FuncCallParams* Args;
+        std::shared_ptr<IdExpr> Id;
+        std::shared_ptr<FuncCallParams> Args;
     public:
-        FuncCallExpr(IdExpr* id, FuncCallParams* args);
+        FuncCallExpr(std::shared_ptr<IdExpr> id, std::shared_ptr<FuncCallParams> args);
         ~FuncCallExpr();
 };
 
 class BinaryExpr:public Stmt {
     public:
         char op;
-        Stmt* left;
-        Stmt* right;
+        std::shared_ptr<Stmt> left;
+        std::shared_ptr<Stmt> right;
     public:
-        BinaryExpr(char op, Stmt* l, Stmt* r);
+        BinaryExpr(char op, std::shared_ptr<Stmt> l, std::shared_ptr<Stmt> r);
         virtual ~BinaryExpr();
 };
 #endif

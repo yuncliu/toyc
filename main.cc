@@ -6,7 +6,7 @@
 #include "Visitor.h"
 #include "DumpVisitor.h"
 #include "LLVMVisitor.h"
-Stmt* root = NULL;
+std::weak_ptr<Stmt> root;
 int main(int argc, char const* argv[]) {
     yyparse();
     Visitor* v1 = new DumpVisitor();

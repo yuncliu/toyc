@@ -2,6 +2,7 @@
 #define _STMT_H_
 #include <string>
 #include <vector>
+#include <memory>
 class CompoundStmt;
 class Visitor;
 class IdExpr;
@@ -15,69 +16,78 @@ class Stmt {
         ~Stmt();
         virtual void Accept(Visitor* v);
         virtual std::string getSelfName();
+        virtual void addStatement(std::shared_ptr<Stmt> s);
 };
 
 class ReturnStmt: public Stmt {
     public:
-        Stmt* Ret;
+        std::shared_ptr<Stmt> Ret;
     public:
-        ReturnStmt(Stmt* ret);
+        ReturnStmt(std::shared_ptr<Stmt> ret);
         ~ReturnStmt();
 };
 
 class CompoundStmt:public Stmt {
     public:
-        std::vector<Stmt*> stmts;
+        //std::vector<Stmt*> stmts;
+        std::vector<std::shared_ptr<Stmt> > stmts;
     public:
         CompoundStmt();
         ~CompoundStmt();
-        void addStatement(Stmt* s);
+        void addStatement(std::shared_ptr<Stmt> s);
 };
 
 class FuncParameter: public Stmt {
     public:
-        std::vector<Stmt*>  Params;
+        std::vector<std::shared_ptr<Stmt> >  Params;
     public:
         FuncParameter();
         ~FuncParameter();
-        void addParam(Stmt* v);
+        void addParam(std::shared_ptr<Stmt> v);
 };
 
 class FuncProtoType: public Stmt {
     public:
-        IdExpr* Id;
-        TypeExpr* ReturnTy;
-        FuncParameter* Param;
+        std::shared_ptr<IdExpr> Id;
+        std::shared_ptr<TypeExpr> ReturnTy;
+        std::shared_ptr<FuncParameter> Param;
     public:
-        FuncProtoType(IdExpr* i, TypeExpr* rty, FuncParameter* param);
+        FuncProtoType(std::shared_ptr<IdExpr> i,
+                std::shared_ptr<TypeExpr> rty,
+                std::shared_ptr<FuncParameter> param);
         ~FuncProtoType();
 };
 
 class FuncCallParams: public Stmt {
     public:
-        std::vector<Stmt*> Parameters;
+        std::vector<std::shared_ptr<Stmt> > Parameters;
     public:
         FuncCallParams();
         ~FuncCallParams();
-        void pushParam(Stmt* parm);
+        void pushParam(std::shared_ptr<Stmt> parm);
 };
 
 class Func:public Stmt {
     public:
-        FuncProtoType* ProtoType;
-        CompoundStmt* FuncBody;
+        std::shared_ptr<FuncProtoType> ProtoType;
+        std::shared_ptr<CompoundStmt> FuncBody;
     public:
-        Func(FuncProtoType* f, CompoundStmt* b);
+        Func(std::shared_ptr<FuncProtoType> f,
+                std::shared_ptr<CompoundStmt> b);
         ~Func();
 };
 
 class IfStmt:public Stmt {
     public:
-        Stmt* Cond;
-        CompoundStmt* Then;
-        CompoundStmt* Else;
+        std::shared_ptr<Stmt> Cond;
+        std::shared_ptr<Stmt> Then;
+        std::shared_ptr<Stmt> Else;
     public:
-        IfStmt(Stmt* Cond, CompoundStmt* Then, CompoundStmt* Else);
+        IfStmt(std::shared_ptr<Stmt> Cond,
+                std::shared_ptr<Stmt>Then,
+                std::shared_ptr<Stmt>Else);
+        IfStmt(std::shared_ptr<Stmt> Cond,
+                std::shared_ptr<Stmt>Then);
         ~IfStmt();
 };
 #endif // _STMT_H_
