@@ -3,9 +3,9 @@
 #include "Stmt.h"
 #include "llvm/IR/ValueSymbolTable.h"
 
-LLVMVisitor::LLVMVisitor() {
-    module = new Module("main", getGlobalContext());
-    builder = new IRBuilder<>(getGlobalContext());
+LLVMVisitor::LLVMVisitor()
+    :module(new Module("main", getGlobalContext())),
+    builder(new IRBuilder<>(getGlobalContext())) {
     CurrentFunction = NULL;
     CurrentBlock = NULL;
 }
@@ -20,8 +20,8 @@ bool LLVMVisitor::Visit(std::shared_ptr<Stmt> s) {
     return true;
 }
 
-Module* LLVMVisitor::getModule() {
-    return module;
+std::unique_ptr<Module> LLVMVisitor::getModule() {
+    return llvm::CloneModule(module.get());
 }
 
 Value* LLVMVisitor::CodeGenForFunc(std::shared_ptr<Stmt> stmt) {
@@ -55,7 +55,7 @@ Function* LLVMVisitor::CodeGenForFuncProtoType(std::shared_ptr<Stmt> stmt) {
     Function* fun = Function::Create(fty,
             Function::ExternalLinkage,
             p->Id->Id,
-            module);
+            module.get());
     return fun;
 }
 
@@ -83,9 +83,8 @@ std::vector<Type*> LLVMVisitor::CodeGenForFuncParams(std::shared_ptr<Stmt> stmt)
 
 Value* LLVMVisitor::CodeGenForCompoundStmt(std::shared_ptr<Stmt> stmt) {
     std::shared_ptr<CompoundStmt> p = std::static_pointer_cast<CompoundStmt>(stmt);
-    int size = p->stmts.size();
-    for (int i = 0; i < size; ++i) {
-        this->CodeGenForStmt(p->stmts[i]);
+    for (auto it : p->stmts) {
+        this->CodeGenForStmt(it);
     }
     return NULL;
 }
@@ -221,7 +220,6 @@ Value* LLVMVisitor::CodeGenForFuncCallExpr(std::shared_ptr<Stmt> stmt) {
     Function* func = module->getFunction(p->Id->Id);
     std::vector<Value*> args;
     for(auto it : p->Args->Parameters) {
-        printf("fuck\n");
         args.push_back(CodeGenForStmt(it));
     }
     CallInst *call = CallInst::Create(func, makeArrayRef(args), "", CurrentBlock);

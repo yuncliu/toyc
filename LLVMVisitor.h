@@ -5,6 +5,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Transforms/Utils/Cloning.h"
 #include <map>
 #include <vector>
 #include "Visitor.h"
@@ -16,8 +17,8 @@ class Stmt;
 using namespace llvm;
 
 class LLVMVisitor:public Visitor {
-    Module* module;
-    IRBuilder<>* builder;
+    std::shared_ptr<Module> module;
+    std::shared_ptr<IRBuilder<> > builder;
     std::map<std::string, Value*> GlobalNamedValue;
     Function* CurrentFunction;
     BasicBlock* CurrentBlock;
@@ -25,7 +26,7 @@ class LLVMVisitor:public Visitor {
     LLVMVisitor();
     virtual ~LLVMVisitor();
     virtual bool Visit(std::shared_ptr<Stmt>);
-    Module* getModule();
+    std::unique_ptr<Module> getModule();
     Value* CodeGenForStmt(std::shared_ptr<Stmt> stmt);
     Value* CodeGenForCompoundStmt(std::shared_ptr<Stmt> stmt);
     Value* CodeGenForFunc(std::shared_ptr<Stmt> stmt);

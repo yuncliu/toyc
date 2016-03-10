@@ -19,8 +19,9 @@ class ASTTest: public testing::Test {
 
         int exe() {
             printf("start to exec\n");
-            EE = EngineBuilder(std::unique_ptr<Module>(visitor->getModule())).create();
-            Function* Func = visitor->getModule()->getFunction("main");
+            std::unique_ptr<Module> m = std::move(visitor->getModule());
+            Function* Func = m.get()->getFunction("main");
+            EE = EngineBuilder(std::move(m)).create();
             std::vector<GenericValue> noargs;
             GenericValue gv = EE->runFunction(Func, noargs);
             printf("Return value is [%ld]\n", *(gv.IntVal.getRawData()));
@@ -88,7 +89,7 @@ TEST_F(ASTTest, return_function) {
     visitor->getModule()->dump();
     EXPECT_EQ(this->exe(), 11);
 }
-
+#if 0
 TEST_F(ASTTest, if_else) {
     yy_scan_string("\
             int main() {\
@@ -127,3 +128,4 @@ TEST_F(ASTTest, int2double) {
     visitor->Visit(root);
     EXPECT_EQ(this->exe(), 10);
 }
+#endif
