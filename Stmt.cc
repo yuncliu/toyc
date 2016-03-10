@@ -14,15 +14,8 @@ Stmt::Stmt(std::string name) {
 Stmt::~Stmt() {
 }
 
-void Stmt::Accept(Visitor* v) {
-    v->Visit(this);
-}
-
 std::string Stmt::getSelfName() {
     return this->Name;
-}
-
-void Stmt::addStatement(std::shared_ptr<Stmt> s) {
 }
 
 // ReturnStmt

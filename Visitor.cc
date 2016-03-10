@@ -8,6 +8,6 @@ Visitor::Visitor() {
 Visitor::~Visitor() {
 }
 
-bool Visitor::Visit(Stmt* stmt) {
+bool Visitor::Visit(std::shared_ptr<Stmt> s) {
     return true;
 }

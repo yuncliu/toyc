@@ -6,7 +6,8 @@
 #include "LLVMVisitor.h"
 #include "lex.h"
 #include "parser.h"
-Stmt* root = NULL;
+//Stmt* root = NULL;
+std::shared_ptr<Stmt> root(NULL);
 class ASTTest: public testing::Test {
     protected:
         ExecutionEngine* EE;
@@ -17,12 +18,14 @@ class ASTTest: public testing::Test {
         }
 
         int exe() {
+            printf("start to exec\n");
             EE = EngineBuilder(std::unique_ptr<Module>(visitor->getModule())).create();
             Function* Func = visitor->getModule()->getFunction("main");
             std::vector<GenericValue> noargs;
             GenericValue gv = EE->runFunction(Func, noargs);
             printf("Return value is [%ld]\n", *(gv.IntVal.getRawData()));
             return *(gv.IntVal.getRawData());
+            return 0;
         }
 
         virtual void TearDown() {
@@ -44,7 +47,7 @@ TEST_F(ASTTest, return0) {
             return 10;\
             }");
     yyparse();
-    root->Accept(visitor);
+    visitor->Visit(root);
     EXPECT_EQ(this->exe(), 10);
 }
 
@@ -53,9 +56,9 @@ TEST_F(ASTTest, return_variable) {
             int a = 10;\
             return a;\
             }");
-yyparse();
-root->Accept(visitor);
-EXPECT_EQ(this->exe(), 10);
+    yyparse();
+    visitor->Visit(root);
+    EXPECT_EQ(this->exe(), 10);
 }
 
 TEST_F(ASTTest, return_global_variable) {
@@ -64,7 +67,7 @@ TEST_F(ASTTest, return_global_variable) {
             return a;\
             }");
     yyparse();
-    root->Accept(visitor);
+    visitor->Visit(root);
     visitor->getModule()->dump();
     EXPECT_EQ(this->exe(), 10);
 }
@@ -81,7 +84,8 @@ TEST_F(ASTTest, return_function) {
             }");
 
     yyparse();
-    root->Accept(visitor);
+    visitor->Visit(root);
+    visitor->getModule()->dump();
     EXPECT_EQ(this->exe(), 11);
 }
 
@@ -95,7 +99,7 @@ TEST_F(ASTTest, if_else) {
             }\
             }");
     yyparse();
-    root->Accept(visitor);
+    visitor->Visit(root);
     EXPECT_EQ(this->exe(), 1);
 }
 
@@ -107,7 +111,7 @@ TEST_F(ASTTest, double2int) {
                 return b;\
             }");
     yyparse();
-    root->Accept(visitor);
+    visitor->Visit(root);
     EXPECT_EQ(this->exe(), 10);
 }
 
@@ -120,6 +124,6 @@ TEST_F(ASTTest, int2double) {
                 return c;\
             }");
     yyparse();
-    root->Accept(visitor);
+    visitor->Visit(root);
     EXPECT_EQ(this->exe(), 10);
 }

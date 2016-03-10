@@ -6,14 +6,14 @@
 #include "Visitor.h"
 #include "DumpVisitor.h"
 #include "LLVMVisitor.h"
-std::weak_ptr<Stmt> root;
+std::shared_ptr<Stmt> root(NULL);
 int main(int argc, char const* argv[]) {
     yyparse();
     Visitor* v1 = new DumpVisitor();
-    Visitor* v2 = new LLVMVisitor();
-    root->Accept(v1);
-    root->Accept(v2);
+    v1->Visit(root);
     delete v1;
+    Visitor* v2 = new LLVMVisitor();
+    v2->Visit(root);
     delete v2;
     return 0;
 }

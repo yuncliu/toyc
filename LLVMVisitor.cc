@@ -15,7 +15,7 @@ LLVMVisitor::~LLVMVisitor() {
     this->module->dump();
 }
 
-bool LLVMVisitor::Visit(Stmt* s) {
+bool LLVMVisitor::Visit(std::shared_ptr<Stmt> s) {
     CodeGenForStmt(s);
     return true;
 }
@@ -24,9 +24,10 @@ Module* LLVMVisitor::getModule() {
     return module;
 }
 
-Value* LLVMVisitor::CodeGenForFunc(Stmt* stmt) {
-    Func* f = static_cast<Func*>(stmt);
-    Function* func = CodeGenForFuncProtoType(f->ProtoType);
+Value* LLVMVisitor::CodeGenForFunc(std::shared_ptr<Stmt> stmt) {
+    //Func* f = static_cast<Func*>(stmt);
+    std::shared_ptr<Func> p = std::static_pointer_cast<Func>(stmt);
+    Function* func = CodeGenForFuncProtoType(p->ProtoType);
     CurrentFunction = func;
     BasicBlock* block = BasicBlock::Create(getGlobalContext(), "entry", func);
     CurrentBlock = block;
@@ -35,18 +36,19 @@ Value* LLVMVisitor::CodeGenForFunc(Stmt* stmt) {
     unsigned i = 0;
     Function::arg_iterator it;
     for (it = func->arg_begin(); it != func->arg_end(); ++it) {
-        Value* v = CodeGenForVarExpr(f->ProtoType->Param->Params[i]);
+        Value* v = CodeGenForVarExpr(p->ProtoType->Param->Params[i]);
         builder->CreateStore(&*it, v);
         i++;
     }
-    this->CodeGenForCompoundStmt(f->FuncBody);
+    this->CodeGenForCompoundStmt(p->FuncBody);
     CurrentBlock = NULL;
     CurrentFunction = NULL;
     return func;
 }
 
-Function* LLVMVisitor::CodeGenForFuncProtoType(Stmt* stmt) {
-    FuncProtoType* p = static_cast<FuncProtoType*>(stmt);
+Function* LLVMVisitor::CodeGenForFuncProtoType(std::shared_ptr<Stmt> stmt) {
+    //FuncProtoType* p = static_cast<FuncProtoType*>(stmt);
+    std::shared_ptr<FuncProtoType> p = std::static_pointer_cast<FuncProtoType>(stmt);
     Type* rty = CodeGenForTypeExpr(p->ReturnTy);
     std::vector<Type*> params = CodeGenForFuncParams(p->Param);
     FunctionType* fty = FunctionType::get(rty, params, false);
@@ -57,8 +59,9 @@ Function* LLVMVisitor::CodeGenForFuncProtoType(Stmt* stmt) {
     return fun;
 }
 
-Type* LLVMVisitor::CodeGenForTypeExpr(Stmt* stmt) {
-    TypeExpr* p = static_cast<TypeExpr*>(stmt);
+Type* LLVMVisitor::CodeGenForTypeExpr(std::shared_ptr<Stmt> stmt) {
+    //TypeExpr* p = static_cast<TypeExpr*>(stmt);
+    std::shared_ptr<TypeExpr> p = std::static_pointer_cast<TypeExpr>(stmt);
     if (p->Type == "int") {
         return Type::getInt32Ty(getGlobalContext());
     }
@@ -68,18 +71,18 @@ Type* LLVMVisitor::CodeGenForTypeExpr(Stmt* stmt) {
     return NULL;
 }
 
-std::vector<Type*> LLVMVisitor::CodeGenForFuncParams(Stmt* stmt) {
-    FuncParameter* p = static_cast<FuncParameter*>(stmt);
+std::vector<Type*> LLVMVisitor::CodeGenForFuncParams(std::shared_ptr<Stmt> stmt) {
+    std::shared_ptr<FuncParameter> p = std::static_pointer_cast<FuncParameter>(stmt);
     std::vector<Type*> v;
     for (auto it: p->Params) {
-        VarExpr* pp = static_cast<VarExpr*>(it);
-        v.push_back(CodeGenForTypeExpr(pp->Type));
+        std::shared_ptr<VarExpr> p = std::static_pointer_cast<VarExpr>(it);
+        v.push_back(CodeGenForTypeExpr(p->Type));
     }
     return v;
 }
 
-Value* LLVMVisitor::CodeGenForCompoundStmt(Stmt* stmt) {
-    CompoundStmt* p = static_cast<CompoundStmt*>(stmt);
+Value* LLVMVisitor::CodeGenForCompoundStmt(std::shared_ptr<Stmt> stmt) {
+    std::shared_ptr<CompoundStmt> p = std::static_pointer_cast<CompoundStmt>(stmt);
     int size = p->stmts.size();
     for (int i = 0; i < size; ++i) {
         this->CodeGenForStmt(p->stmts[i]);
@@ -87,7 +90,7 @@ Value* LLVMVisitor::CodeGenForCompoundStmt(Stmt* stmt) {
     return NULL;
 }
 
-Value* LLVMVisitor::CodeGenForStmt(Stmt* stmt) {
+Value* LLVMVisitor::CodeGenForStmt(std::shared_ptr<Stmt> stmt) {
     if (stmt->getSelfName() == "CompoundStmt") {
         return this->CodeGenForCompoundStmt(stmt);
     }
@@ -115,14 +118,14 @@ Value* LLVMVisitor::CodeGenForStmt(Stmt* stmt) {
     return NULL;
 }
 
-Value* LLVMVisitor::CodeGenForReturnStmt(Stmt* stmt) {
-    ReturnStmt* p = static_cast<ReturnStmt*>(stmt);
+Value* LLVMVisitor::CodeGenForReturnStmt(std::shared_ptr<Stmt> stmt) {
+    std::shared_ptr<ReturnStmt> p = std::static_pointer_cast<ReturnStmt>(stmt);
     Value* retval = GetRightValue(CodeGenForStmt(p->Ret));
     return this->builder->CreateRet(retval);
 }
 
-Value* LLVMVisitor::CodeGenForBinaryExpr(Stmt* stmt) {
-    BinaryExpr* p = static_cast<BinaryExpr*>(stmt);
+Value* LLVMVisitor::CodeGenForBinaryExpr(std::shared_ptr<Stmt> stmt) {
+    std::shared_ptr<BinaryExpr> p = std::static_pointer_cast<BinaryExpr>(stmt);
     Value* l = this->CodeGenForStmt(p->left);
     Value* r = this->CodeGenForStmt(p->right);
     switch(p->op) {
@@ -153,8 +156,8 @@ Value* LLVMVisitor::CodeGenForBinaryExpr(Stmt* stmt) {
     return this->builder->CreateAdd(l,r);
 }
 
-Value* LLVMVisitor::CodeGenForIdExpr(Stmt* stmt) {
-    IdExpr* p = static_cast<IdExpr*>(stmt);
+Value* LLVMVisitor::CodeGenForIdExpr(std::shared_ptr<Stmt> stmt) {
+    std::shared_ptr<IdExpr> p = std::static_pointer_cast<IdExpr>(stmt);
     if (NULL == CurrentFunction) {
         // if is not in function, must be a global value
         return module->getNamedGlobal(p->Id);
@@ -174,13 +177,14 @@ Value* LLVMVisitor::CodeGenForIdExpr(Stmt* stmt) {
     return v;
 }
 
-Value* LLVMVisitor::CodeGenForIntExpr(Stmt* stmt) {
-    IntExpr* p = static_cast<IntExpr*>(stmt);
+Value* LLVMVisitor::CodeGenForIntExpr(std::shared_ptr<Stmt> stmt) {
+    std::shared_ptr<IntExpr> p = std::static_pointer_cast<IntExpr>(stmt);
     return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), p->value, true);
 }
 
-Value* LLVMVisitor::CodeGenForVarExpr(Stmt* stmt) {
-    VarExpr* p = (VarExpr*)stmt;
+Value* LLVMVisitor::CodeGenForVarExpr(std::shared_ptr<Stmt> stmt) {
+    //VarExpr* p = (VarExpr*)stmt;
+    std::shared_ptr<VarExpr> p = std::static_pointer_cast<VarExpr>(stmt);
     if (NULL == CurrentFunction){
         Type* ty = CodeGenForTypeExpr(p->Type);
         GlobalVariable* global = new GlobalVariable(*module, ty,
@@ -212,11 +216,12 @@ Value* LLVMVisitor::GetRightValue(Value* v) {
     return v;
 }
 
-Value* LLVMVisitor::CodeGenForFuncCallExpr(Stmt* stmt) {
-    FuncCallExpr* p = static_cast<FuncCallExpr*>(stmt);
+Value* LLVMVisitor::CodeGenForFuncCallExpr(std::shared_ptr<Stmt> stmt) {
+    std::shared_ptr<FuncCallExpr> p = std::static_pointer_cast<FuncCallExpr>(stmt);
     Function* func = module->getFunction(p->Id->Id);
     std::vector<Value*> args;
     for(auto it : p->Args->Parameters) {
+        printf("fuck\n");
         args.push_back(CodeGenForStmt(it));
     }
     CallInst *call = CallInst::Create(func, makeArrayRef(args), "", CurrentBlock);

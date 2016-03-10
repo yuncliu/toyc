@@ -14,9 +14,7 @@ class Stmt {
     public:
         Stmt(std::string name);
         ~Stmt();
-        virtual void Accept(Visitor* v);
         virtual std::string getSelfName();
-        virtual void addStatement(std::shared_ptr<Stmt> s);
 };
 
 class ReturnStmt: public Stmt {

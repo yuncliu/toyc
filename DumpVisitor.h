@@ -8,7 +8,7 @@
 #define COLOR_RESET "\033[0m"
 class DumpVisitor;
 class Stmt;
-typedef bool (DumpVisitor::*VISIT_FUNC)(Stmt* s);
+typedef bool (DumpVisitor::*VISIT_FUNC)(std::shared_ptr<Stmt> s);
 
 class DumpVisitor:public Visitor {
     protected:
@@ -19,18 +19,19 @@ class DumpVisitor:public Visitor {
         DumpVisitor();
         virtual ~DumpVisitor();
         VISIT_FUNC getFunction(std::string name);
-        virtual bool Visit(Stmt*);
+        virtual bool Visit(std::shared_ptr<Stmt> s);
         void print_prefix();
-        bool VisitCompoundStmt(Stmt* stmt);
-        bool VisitFunc(Stmt* stmt);
-        bool VisitFuncProtoType(Stmt* stmt);
-        bool VisitIdExpr(Stmt* stmt);
-        bool VisitTypeExpr(Stmt* stmt);
-        bool VisitFuncParameter(Stmt* stmt);
-        bool VisitVarExpr(Stmt* stmt);
-        bool VisitBinaryExpr(Stmt* stmt);
-        bool VisitReturnStmt(Stmt* stmt);
-        bool VisitIntExpr(Stmt* stmt);
+        bool VisitCompoundStmt(std::shared_ptr<Stmt> stmt);
+        bool VisitFunc(std::shared_ptr<Stmt> stmt);
+        bool VisitFuncProtoType(std::shared_ptr<Stmt> stmt);
+        bool VisitIdExpr(std::shared_ptr<Stmt> stmt);
+        bool VisitTypeExpr(std::shared_ptr<Stmt> stmt);
+        bool VisitFuncParameter(std::shared_ptr<Stmt> stmt);
+        bool VisitVarExpr(std::shared_ptr<Stmt> stmt);
+        bool VisitBinaryExpr(std::shared_ptr<Stmt> stmt);
+        bool VisitReturnStmt(std::shared_ptr<Stmt> stmt);
+        bool VisitIntExpr(std::shared_ptr<Stmt> stmt);
+        bool VisitFuncCallExpr(std::shared_ptr<Stmt> stmt);
 };
 
 #endif // _VISITOR_H_

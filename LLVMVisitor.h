@@ -24,22 +24,22 @@ class LLVMVisitor:public Visitor {
     public:
     LLVMVisitor();
     virtual ~LLVMVisitor();
-    virtual bool Visit(Stmt*);
+    virtual bool Visit(std::shared_ptr<Stmt>);
     Module* getModule();
-    Value* CodeGenForStmt(Stmt* stmt);
-    Value* CodeGenForCompoundStmt(Stmt* stmt);
-    Value* CodeGenForFunc(Stmt* stmt);
-    Function* CodeGenForFuncProtoType(Stmt* stmt);
-    Type* CodeGenForTypeExpr(Stmt* stmt);
-    std::vector<Type*> CodeGenForFuncParams(Stmt* stmt);
-    Value* CodeGenForBinaryExpr(Stmt* stmt);
-    Value* CodeGenForReturnStmt(Stmt* stmt);
-    Value* CodeGenForIdExpr(Stmt* stmt);
-    Value* CodeGenForIntExpr(Stmt* stmt);
-    Value* CodeGenForVarExpr(Stmt* stmt);
+    Value* CodeGenForStmt(std::shared_ptr<Stmt> stmt);
+    Value* CodeGenForCompoundStmt(std::shared_ptr<Stmt> stmt);
+    Value* CodeGenForFunc(std::shared_ptr<Stmt> stmt);
+    Function* CodeGenForFuncProtoType(std::shared_ptr<Stmt> stmt);
+    Type* CodeGenForTypeExpr(std::shared_ptr<Stmt> stmt);
+    std::vector<Type*> CodeGenForFuncParams(std::shared_ptr<Stmt> stmt);
+    Value* CodeGenForBinaryExpr(std::shared_ptr<Stmt> stmt);
+    Value* CodeGenForReturnStmt(std::shared_ptr<Stmt> stmt);
+    Value* CodeGenForIdExpr(std::shared_ptr<Stmt> stmt);
+    Value* CodeGenForIntExpr(std::shared_ptr<Stmt> stmt);
+    Value* CodeGenForVarExpr(std::shared_ptr<Stmt> stmt);
+    Value* CodeGenForFuncCallExpr(std::shared_ptr<Stmt> stmt);
     Value* GetLeftValue(Value* v);
     Value* GetRightValue(Value* v);
-    Value* CodeGenForFuncCallExpr(Stmt* stmt);
 };
 
 #endif // _VISITOR_H_
