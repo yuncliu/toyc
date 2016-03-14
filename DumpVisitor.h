@@ -32,6 +32,7 @@ class DumpVisitor:public Visitor {
         bool VisitReturnStmt(std::shared_ptr<Stmt> stmt);
         bool VisitIntExpr(std::shared_ptr<Stmt> stmt);
         bool VisitFuncCallExpr(std::shared_ptr<Stmt> stmt);
+        bool VisitIfStmt(std::shared_ptr<Stmt> stmt);
 };
 
 #endif // _VISITOR_H_

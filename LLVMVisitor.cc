@@ -114,6 +114,9 @@ Value* LLVMVisitor::CodeGenForStmt(std::shared_ptr<Stmt> stmt) {
     if (stmt->getSelfName() == "FuncCallExpr") {
         return this->CodeGenForFuncCallExpr(stmt);
     }
+    if (stmt->getSelfName() == "IfStmt") {
+        return this->CodeGenForIfStmt(stmt);
+    }
     return NULL;
 }
 
@@ -224,4 +227,28 @@ Value* LLVMVisitor::CodeGenForFuncCallExpr(std::shared_ptr<Stmt> stmt) {
     }
     CallInst *call = CallInst::Create(func, makeArrayRef(args), "", CurrentBlock);
     return call;
+}
+
+Value* LLVMVisitor::CodeGenForIfStmt(std::shared_ptr<Stmt> stmt) {
+    std::shared_ptr<IfStmt> p = std::static_pointer_cast<IfStmt>(stmt);
+    Value* CondV = CodeGenForStmt(p->Cond);
+    if (isa<AllocaInst>(CondV)) {
+        CondV = builder->CreateLoad(CondV);
+    }
+    Value *Zero = ConstantInt::get(getGlobalContext(), APInt(32, 0));
+    CondV = builder->CreateICmpNE(CondV, Zero);
+    Function *TheFunction = builder->GetInsertBlock()->getParent();
+    BasicBlock *ThenBB = BasicBlock::Create(getGlobalContext(), "then", TheFunction);
+    BasicBlock *ElseBB = BasicBlock::Create(getGlobalContext(), "else", TheFunction);
+    builder->CreateCondBr(CondV, ThenBB, ElseBB);
+    builder->SetInsertPoint(ThenBB);
+    CodeGenForStmt(p->Then);
+    ThenBB = builder->GetInsertBlock();
+    builder->CreateBr(ElseBB);
+    builder->SetInsertPoint(ElseBB);
+    if (p->Else) {
+        CodeGenForStmt(p->Else);
+    }
+    ElseBB = builder->GetInsertBlock();
+    return NULL;
 }

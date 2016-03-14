@@ -39,6 +39,7 @@ class LLVMVisitor:public Visitor {
     Value* CodeGenForIntExpr(std::shared_ptr<Stmt> stmt);
     Value* CodeGenForVarExpr(std::shared_ptr<Stmt> stmt);
     Value* CodeGenForFuncCallExpr(std::shared_ptr<Stmt> stmt);
+    Value* CodeGenForIfStmt(std::shared_ptr<Stmt> stmt);
     Value* GetLeftValue(Value* v);
     Value* GetRightValue(Value* v);
 };
