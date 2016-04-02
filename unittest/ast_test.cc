@@ -19,12 +19,17 @@ class ASTTest: public testing::Test {
 
         int exe() {
             printf("start to exec\n");
-            std::unique_ptr<Module> m = std::move(visitor->getModule());
+            //std::unique_ptr<Module> m = std::move(visitor->getModule());
+            std::unique_ptr<Module> m = visitor->getModule();
             Function* Func = m.get()->getFunction("main");
             EE = EngineBuilder(std::move(m)).create();
             std::vector<GenericValue> noargs;
             GenericValue gv = EE->runFunction(Func, noargs);
+#ifdef __linux
             printf("Return value is [%ld]\n", *(gv.IntVal.getRawData()));
+#else
+            printf("Return value is [%llu]\n", *(gv.IntVal.getRawData()));
+#endif
             return *(gv.IntVal.getRawData());
             return 0;
         }
