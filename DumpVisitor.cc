@@ -15,6 +15,7 @@ DumpVisitor::DumpVisitor():is_last(false) {
     functions.insert(std::pair<std::string, VISIT_FUNC>("IntExpr", &DumpVisitor::VisitIntExpr));
     functions.insert(std::pair<std::string, VISIT_FUNC>("FuncCallExpr", &DumpVisitor::VisitFuncCallExpr));
     functions.insert(std::pair<std::string, VISIT_FUNC>("IfStmt", &DumpVisitor::VisitIfStmt));
+    functions.insert(std::pair<std::string, VISIT_FUNC>("AssignStmt", &DumpVisitor::VisitAssignStmt));
 }
 
 DumpVisitor::~DumpVisitor() {
@@ -210,6 +211,16 @@ bool DumpVisitor::VisitIfStmt(std::shared_ptr<Stmt> stmt) {
         is_last = true;
         this->Visit(p->Else);
     }
+    this->prefix.pop_back();
+    return true;
+}
+
+bool DumpVisitor::VisitAssignStmt(std::shared_ptr<Stmt> stmt) {
+    std::shared_ptr<AssignStmt> p = std::static_pointer_cast<AssignStmt>(stmt);
+    printf("Assignment\n");
+    this->prefix.push_back("|-");
+    this->Visit(p->left);
+    this->Visit(p->right);
     this->prefix.pop_back();
     return true;
 }

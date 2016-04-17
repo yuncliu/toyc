@@ -117,6 +117,9 @@ Value* LLVMVisitor::CodeGenForStmt(std::shared_ptr<Stmt> stmt) {
     if (stmt->getSelfName() == "IfStmt") {
         return this->CodeGenForIfStmt(stmt);
     }
+    if (stmt->getSelfName() == "AssignStmt") {
+        return this->CodeGenForAssignStmt(stmt);
+    }
     return NULL;
 }
 
@@ -140,17 +143,6 @@ Value* LLVMVisitor::CodeGenForBinaryExpr(std::shared_ptr<Stmt> stmt) {
             l = GetRightValue(l);
             r = GetRightValue(r);
             return this->builder->CreateSub(l,r);
-            break;
-        case '=':
-            if (NULL == CurrentFunction) {
-                if (p->left->getSelfName() == "VarExpr") {
-                    static_cast<GlobalVariable*>(l)->setInitializer(static_cast<Constant*>(r));
-                    return NULL;
-                }
-            }
-            l = GetLeftValue(l);
-            r = GetRightValue(r);
-            return this->builder->CreateStore(r,l);
             break;
         default:
             break;
@@ -251,4 +243,19 @@ Value* LLVMVisitor::CodeGenForIfStmt(std::shared_ptr<Stmt> stmt) {
     }
     ElseBB = builder->GetInsertBlock();
     return NULL;
+}
+
+Value* LLVMVisitor::CodeGenForAssignStmt(std::shared_ptr<Stmt> stmt) {
+    std::shared_ptr<AssignStmt> p = std::static_pointer_cast<AssignStmt>(stmt);
+    Value* l = this->CodeGenForStmt(p->left);
+    Value* r = this->CodeGenForStmt(p->right);
+    if (NULL == CurrentFunction) {
+        if (p->left->getSelfName() == "VarExpr") {
+            static_cast<GlobalVariable*>(l)->setInitializer(static_cast<Constant*>(r));
+            return NULL;
+        }
+    }
+    l = GetLeftValue(l);
+    r = GetRightValue(r);
+    return this->builder->CreateStore(r,l);
 }

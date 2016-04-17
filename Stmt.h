@@ -88,4 +88,14 @@ class IfStmt:public Stmt {
                 std::shared_ptr<Stmt>Then);
         ~IfStmt();
 };
+
+class AssignStmt:public Stmt {
+    public:
+        std::shared_ptr<Stmt> left;
+        std::shared_ptr<Stmt> right;
+    public:
+        AssignStmt(std::shared_ptr<Stmt> left,
+                std::shared_ptr<Stmt> right);
+        ~AssignStmt();
+};
 #endif // _STMT_H_

@@ -94,3 +94,12 @@ IfStmt::IfStmt(std::shared_ptr<Stmt> Cond,
 
 IfStmt::~IfStmt() {
 }
+
+// AssignStmt
+AssignStmt::AssignStmt(std::shared_ptr<Stmt> left,
+    std::shared_ptr<Stmt> right)
+:Stmt("AssignStmt"), left(left), right(right) {
+}
+
+AssignStmt::~AssignStmt() {
+}

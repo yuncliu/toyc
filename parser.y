@@ -65,7 +65,8 @@ stmt:
         $$ = $1;
     }
     | exp '=' exp ';'{
-        $$ = shared_ptr<Stmt>(new BinaryExpr('=', $1, $3));
+        //$$ = shared_ptr<Stmt>(new BinaryExpr('=', $1, $3));
+        $$ = shared_ptr<Stmt>(new AssignStmt($1, $3));
     }
     |RETURN exp ';' {
         $$ = shared_ptr<Stmt>(new ReturnStmt($2));
