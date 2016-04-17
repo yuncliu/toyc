@@ -28,7 +28,7 @@ extern std::shared_ptr<Stmt> root;
 %token DOUBLE_TYPE
 %token RETURN
 %left '-' '+'
-%left '*' '/'
+%left '*' '/' '='
 %right '^'
 %%
 program:
@@ -61,9 +61,6 @@ stmt_list:
 
 stmt:
     exp ';' {
-        $$ = $1;
-    }
-    |var ';' {
         $$ = $1;
     }
     |RETURN exp ';' {
