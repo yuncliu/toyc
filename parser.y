@@ -30,9 +30,10 @@ extern std::shared_ptr<Stmt> root;
 %left '-' '+'
 %left '*' '/'
 %right '^'
+%right '='
 %%
 program:
-    stmt_list {
+       stmt_list {
         root = $1;
     }
 ;
@@ -63,8 +64,8 @@ stmt:
     exp ';' {
         $$ = $1;
     }
-    |var ';' {
-        $$ = $1;
+    | exp '=' exp ';'{
+        $$ = shared_ptr<Stmt>(new BinaryExpr('=', $1, $3));
     }
     |RETURN exp ';' {
         $$ = shared_ptr<Stmt>(new ReturnStmt($2));
@@ -141,9 +142,6 @@ exp:
     }
     | exp '/' exp {
         $$ = shared_ptr<Stmt>(new BinaryExpr('/', $1, $3));
-    }
-    | exp '=' exp {
-        $$ = shared_ptr<Stmt>(new BinaryExpr('=', $1, $3));
     }
     | identifier {
         $$ = $1;
