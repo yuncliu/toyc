@@ -30,7 +30,7 @@ extern std::shared_ptr<Stmt> root;
 %left '-' '+'
 %left '*' '/'
 %right '^'
-%right '='
+%token '='
 %%
 program:
        stmt_list {
