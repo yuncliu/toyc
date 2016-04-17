@@ -28,11 +28,12 @@ extern std::shared_ptr<Stmt> root;
 %token DOUBLE_TYPE
 %token RETURN
 %left '-' '+'
-%left '*' '/' '='
+%left '*' '/'
 %right '^'
+%right '='
 %%
 program:
-    stmt_list {
+       stmt_list {
         root = $1;
     }
 ;
@@ -62,6 +63,9 @@ stmt_list:
 stmt:
     exp ';' {
         $$ = $1;
+    }
+    | exp '=' exp ';'{
+        $$ = shared_ptr<Stmt>(new BinaryExpr('=', $1, $3));
     }
     |RETURN exp ';' {
         $$ = shared_ptr<Stmt>(new ReturnStmt($2));
@@ -99,7 +103,6 @@ function_args:
         $$ = shared_ptr<Stmt>(new FuncParameter());
     }
     |var {
-        printf("xxxxxxxx\n");
         std::shared_ptr<FuncParameter> p(new FuncParameter());
         p->addParam($1);
         $$ = p;
@@ -138,9 +141,6 @@ exp:
     }
     | exp '/' exp {
         $$ = shared_ptr<Stmt>(new BinaryExpr('/', $1, $3));
-    }
-    | exp '=' exp {
-        $$ = shared_ptr<Stmt>(new BinaryExpr('=', $1, $3));
     }
     | identifier {
         $$ = $1;
