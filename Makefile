@@ -24,6 +24,7 @@ TEST=t.out
 VPATH		 = ./
 
 INC=-I.\
+	-I`llvm-config --includedir`
 
 LIB=-L.
 

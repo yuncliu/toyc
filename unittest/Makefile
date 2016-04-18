@@ -4,7 +4,7 @@ YACC=bison
 CC=${CC}
 CFLAGS=-Wall -std=c++11 -g -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 LINKS	=  -lstdc++ -lgtest -lpthread -lm \
-		`llvm-config --ldflags --libs --system-libs --libs`
+		`llvm-config --ldflags --libs --system-libs --libs` -lffi
 
 CCOBJS	=../lex.o \
 		../parser.o \
@@ -21,7 +21,8 @@ VPATH		 = ./
 
 INC=-I.\
 	-I.. \
-	-I../googletest/googletest/include
+	-I../googletest/googletest/include \
+	-I`llvm-config --includedir`
 
 
 LIB=-L. \
