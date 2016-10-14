@@ -1,14 +1,15 @@
 #ifndef _LLVM_VISITOR_H_
 #define _LLVM_VISITOR_H_
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Verifier.h"
-#include "llvm/Transforms/Utils/Cloning.h"
+
 #include <map>
 #include <vector>
+
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/IRBuilder.h"
+
 #include "Visitor.h"
+
 #define LIGHT_GREEN "\x1B[0;1;32m"
 #define COLOR_BLUE "\x1B[34m"
 #define COLOR_RESET "\033[0m"

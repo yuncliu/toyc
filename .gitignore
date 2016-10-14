@@ -11,3 +11,4 @@ googletest
 *.c
 *.ll
 core
+*.s

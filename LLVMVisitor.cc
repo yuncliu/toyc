@@ -1,7 +1,11 @@
 #include "LLVMVisitor.h"
 #include "Expr.h"
 #include "Stmt.h"
+
 #include "llvm/IR/ValueSymbolTable.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/Transforms/Utils/Cloning.h"
+#include "llvm/IR/Verifier.h"
 
 LLVMVisitor::LLVMVisitor()
     :module(new Module("main", getGlobalContext())),
