@@ -4,14 +4,13 @@
 
 #include "Expr.h"
 #include "Stmt.h"
-#include "lex.h"
-#include "parser.h"
 #include "Visitor.h"
 #include "DumpVisitor.h"
 #include "LLVMVisitor.h"
 #include "llvm/Bitcode/ReaderWriter.h"
 
-std::shared_ptr<Stmt> root(NULL);
+#include "FlexBisonFrontEnd.h"
+
 int main(int argc, char const* argv[]) {
 
     if (argc < 2) {
@@ -23,18 +22,15 @@ int main(int argc, char const* argv[]) {
     std::string inputFileNoExt = inputFile.substr(0, inputFile.find("."));
     std::cout << inputFileNoExt << std::endl;
 
-    // Open input file
-    yyin = fopen(argv[1], "r");
-    yyparse();
-    fclose(yyin);
+    FlexBisonFrontEnd frontend;
+    std::shared_ptr<Stmt> ast = frontend.parse(inputFile);
 
-    // dump AST tree
     std::shared_ptr<DumpVisitor> v1(new DumpVisitor());
-    v1->Visit(root);
+    v1->Visit(ast);
 
     // generate LLVM IR
     std::shared_ptr<LLVMVisitor> v2(new LLVMVisitor());
-    v2->Visit(root);
+    v2->Visit(ast);
     std::unique_ptr<Module> module = v2->getModule();
 
     // write IR in to file

@@ -15,7 +15,7 @@ void yyerror (char const *);
 extern char* yytext;
 //extern Stmt* root;
 //extern std::weak_ptr<Stmt> root;
-extern std::shared_ptr<Stmt> root;
+std::shared_ptr<Stmt> root;
 #define YYSTYPE std::shared_ptr<Stmt>
 %}
 
