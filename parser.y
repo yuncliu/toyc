@@ -8,7 +8,6 @@
 #include <memory>
 #include "Expr.h"
 #include "Stmt.h"
-#include "DumpVisitor.h"
 #include "Visitor.h"
 using namespace std;
 int yylex (void);
@@ -190,7 +189,6 @@ type:
 %%
 
 void
-yyerror (char const *s)
-{
+yyerror (char const *s) {
     fprintf (stderr, "%s\n", s);
 }
