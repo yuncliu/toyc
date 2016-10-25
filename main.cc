@@ -24,6 +24,10 @@ int main(int argc, char const* argv[]) {
 
     FlexBisonFrontEnd frontend;
     std::shared_ptr<Stmt> ast = frontend.parse(inputFile);
+    if (!ast) {
+        printf("No AST tree!\n");
+        return 0;
+    }
 
     std::shared_ptr<DumpVisitor> v1(new DumpVisitor());
     v1->Visit(ast);

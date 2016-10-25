@@ -94,6 +94,9 @@ Value* LLVMVisitor::CodeGenForCompoundStmt(std::shared_ptr<Stmt> stmt) {
 }
 
 Value* LLVMVisitor::CodeGenForStmt(std::shared_ptr<Stmt> stmt) {
+    if (!stmt) {
+        return NULL;
+    }
     if (stmt->getSelfName() == "CompoundStmt") {
         return this->CodeGenForCompoundStmt(stmt);
     }

@@ -30,6 +30,9 @@ VISIT_FUNC DumpVisitor::getFunction(std::string name) {
 }
 
 bool DumpVisitor::Visit(std::shared_ptr<Stmt> s) {
+    if (!s) {
+        return false;
+    }
     std::string a = s->getSelfName();
     VISIT_FUNC visit_func = this->getFunction(a);
     if (NULL == visit_func) {
