@@ -2,13 +2,13 @@
 #define _VISITOR_H_
 #include <map>
 #include <memory>
-class Stmt;
+class ASTNode;
 
 class Visitor {
     public:
         Visitor();
         virtual ~Visitor();
-        virtual bool Visit(std::shared_ptr<Stmt> s);
+        virtual bool Visit(std::shared_ptr<ASTNode> s);
 };
 
 #endif // _VISITOR_H_

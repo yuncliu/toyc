@@ -8,12 +8,10 @@ LINKS	=  -lstdc++ -lm `llvm-config --ldflags --system-libs --libs`
 
 EXEOBJS	= lex.o \
 		  parser.o \
-		  Expr.o \
-		  Stmt.o \
-		  Visitor.o \
-		  DumpVisitor.o \
-		  LLVMVisitor.o \
+		  ASTNode.o \
 		  FlexBisonFrontEnd.o \
+		  DumpVisitor.o \
+		  Visitor.o \
 		  main.o
 
 LEX_CC		= lex.cc

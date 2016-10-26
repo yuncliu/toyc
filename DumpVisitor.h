@@ -7,8 +7,8 @@
 #define COLOR_BLUE "\x1B[34m"
 #define COLOR_RESET "\033[0m"
 class DumpVisitor;
-class Stmt;
-typedef bool (DumpVisitor::*VISIT_FUNC)(std::shared_ptr<Stmt> s);
+class ASTNode;
+typedef bool (DumpVisitor::*VISIT_FUNC)(std::shared_ptr<ASTNode> s);
 
 class DumpVisitor:public Visitor {
     protected:
@@ -19,8 +19,9 @@ class DumpVisitor:public Visitor {
         DumpVisitor();
         virtual ~DumpVisitor();
         VISIT_FUNC getFunction(std::string name);
-        virtual bool Visit(std::shared_ptr<Stmt> s);
+        virtual bool Visit(std::shared_ptr<ASTNode> s);
         void print_prefix();
+        /*
         bool VisitCompoundStmt(std::shared_ptr<Stmt> stmt);
         bool VisitFunc(std::shared_ptr<Stmt> stmt);
         bool VisitFuncProtoType(std::shared_ptr<Stmt> stmt);
@@ -34,6 +35,7 @@ class DumpVisitor:public Visitor {
         bool VisitFuncCallExpr(std::shared_ptr<Stmt> stmt);
         bool VisitIfStmt(std::shared_ptr<Stmt> stmt);
         bool VisitAssignStmt(std::shared_ptr<Stmt> stmt);
+        */
 };
 
 #endif // _VISITOR_H_

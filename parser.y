@@ -1,12 +1,11 @@
 %{
 #include "lex.h"
-#include "Stmt.h"
+#include <memory>
+#include "ASTNode.h"
 void yyerror(const char *s);
 extern char* yytext;
-//extern Stmt* root;
-//extern std::weak_ptr<Stmt> root;
-//std::shared_ptr<Stmt> root(NULL);
-#define YYSTYPE std::shared_ptr<Stmt>
+extern std::shared_ptr<ASTNode> ast;
+#define YYSTYPE std::shared_ptr<ASTNode>
 %}
 %token    IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
 %token    PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
@@ -30,14 +29,22 @@ extern char* yytext;
 
 primary_expression
     : IDENTIFIER
-    | constant
+    | constant {
+        $$ = $1;
+        printf("primary [%s]\n", $1->value.c_str());
+    }
     | string
     | '(' expression ')'
     | generic_selection
     ;
 
 constant
-    : I_CONSTANT        /* includes character_constant */
+    : I_CONSTANT {
+        /* includes character_constant */
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = yytext;
+        printf("constant [%s]\n", $$->value.c_str());
+    }
     | F_CONSTANT
     | ENUMERATION_CONSTANT    /* after it has been defined as such */
     ;
@@ -66,7 +73,10 @@ generic_association
     ;
 
 postfix_expression
-    : primary_expression
+    : primary_expression {
+        $$ = $1;
+        printf("postfix_expression from primary_expression[%s]\n", $$->value.c_str());
+    }
     | postfix_expression '[' expression ']'
     | postfix_expression '(' ')'
     | postfix_expression '(' argument_expression_list ')'
@@ -84,7 +94,10 @@ argument_expression_list
     ;
 
 unary_expression
-    : postfix_expression
+    : postfix_expression {
+        $$ = $1;
+        printf("unary_expression from postfix_expression [%s]\n", $$->value.c_str());
+    }
     | INC_OP unary_expression
     | DEC_OP unary_expression
     | unary_operator cast_expression
@@ -103,31 +116,44 @@ unary_operator
     ;
 
 cast_expression
-    : unary_expression
+    : unary_expression {
+        $$ = $1;
+        printf("cast from unary_expression[%s]\n", $$->value.c_str());
+    }
     | '(' type_name ')' cast_expression
     ;
 
 multiplicative_expression
-    : cast_expression
+    : cast_expression {
+        $$ = $1;
+        printf("multiplicative_expression from cast_expression[%s]\n", $$->value.c_str());
+    }
     | multiplicative_expression '*' cast_expression
     | multiplicative_expression '/' cast_expression
     | multiplicative_expression '%' cast_expression
     ;
 
 additive_expression
-    : multiplicative_expression
+    : multiplicative_expression {
+        $$ = $1;
+    }
     | additive_expression '+' multiplicative_expression
     | additive_expression '-' multiplicative_expression
     ;
 
 shift_expression
-    : additive_expression
+    : additive_expression {
+        $$ = $1;
+        printf("shift_expression [%s]\n", $$->value.c_str());
+    }
     | shift_expression LEFT_OP additive_expression
     | shift_expression RIGHT_OP additive_expression
     ;
 
 relational_expression
-    : shift_expression
+    : shift_expression {
+        $$ = $1;
+    }
     | relational_expression '<' shift_expression
     | relational_expression '>' shift_expression
     | relational_expression LE_OP shift_expression
@@ -135,43 +161,62 @@ relational_expression
     ;
 
 equality_expression
-    : relational_expression
+    : relational_expression {
+        $$ = $1;
+    }
     | equality_expression EQ_OP relational_expression
     | equality_expression NE_OP relational_expression
     ;
 
 and_expression
-    : equality_expression
+    : equality_expression {
+        $$ = $1;
+    }
     | and_expression '&' equality_expression
     ;
 
 exclusive_or_expression
-    : and_expression
+    : and_expression {
+        $$ = $1;
+        printf("and_expression [%s]\n", $$->value.c_str());
+    }
     | exclusive_or_expression '^' and_expression
     ;
 
 inclusive_or_expression
-    : exclusive_or_expression
+    : exclusive_or_expression {
+        $$ = $1;
+    }
     | inclusive_or_expression '|' exclusive_or_expression
     ;
 
 logical_and_expression
-    : inclusive_or_expression
+    : inclusive_or_expression {
+        $$ = $1;
+    }
     | logical_and_expression AND_OP inclusive_or_expression
     ;
 
 logical_or_expression
-    : logical_and_expression
+    : logical_and_expression {
+        $$ = $1;
+        printf("logical_or_expression [%s]\n", $$->value.c_str());
+    }
     | logical_or_expression OR_OP logical_and_expression
     ;
 
 conditional_expression
-    : logical_or_expression
+    : logical_or_expression {
+        $$ = $1;
+    }
     | logical_or_expression '?' expression ':' conditional_expression
     ;
 
 assignment_expression
-    : conditional_expression
+    : conditional_expression {
+        $$ = $1;
+        printf("assignment_expression [%s]\n", $$->value.c_str());
+    }
     | unary_expression assignment_operator assignment_expression
     ;
 
@@ -190,7 +235,10 @@ assignment_operator
     ;
 
 expression
-    : assignment_expression
+    : assignment_expression {
+        $$ = $1;
+        printf("expression [%s]\n", $$->value.c_str());
+    }
     | expression ',' assignment_expression
     ;
 
@@ -200,7 +248,13 @@ constant_expression
 
 declaration
     : declaration_specifiers ';'
-    | declaration_specifiers init_declarator_list ';'
+    | declaration_specifiers init_declarator_list ';' {
+        printf("declaration [%s] [%s]\n", $1->value.c_str(), $2->value.c_str());
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->type = ASTNode::DECL;
+        $$->children.push_back($1);
+        $$->children.push_back($2);
+    }
     | static_assert_declaration
     ;
 
@@ -208,7 +262,9 @@ declaration_specifiers
     : storage_class_specifier declaration_specifiers
     | storage_class_specifier
     | type_specifier declaration_specifiers
-    | type_specifier
+    | type_specifier {
+        $$ = $1;
+    }
     | type_qualifier declaration_specifiers
     | type_qualifier
     | function_specifier declaration_specifiers
@@ -218,12 +274,21 @@ declaration_specifiers
     ;
 
 init_declarator_list
-    : init_declarator
+    : init_declarator {
+        $$ = $1;
+    }
     | init_declarator_list ',' init_declarator
     ;
 
 init_declarator
-    : declarator '=' initializer
+    : declarator '=' initializer {
+        printf("init_declarator [%s]= [%s]\n", $1->value.c_str(), $3->value.c_str());
+        $$ = std::shared_ptr<ASTNode>(new ASTNode);
+        $$->value = "init_declarator";
+        $$->children.push_back($1);
+        $$->children.push_back($3);
+        $$->type = ASTNode::EXPR;
+    }
     | declarator
     ;
 
@@ -240,7 +305,11 @@ type_specifier
     : VOID
     | CHAR
     | SHORT
-    | INT
+    | INT {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = yytext;
+        $$->type = ASTNode::TYPE_SPECIFIER;
+    }
     | LONG
     | FLOAT
     | DOUBLE
@@ -336,11 +405,17 @@ alignment_specifier
 
 declarator
     : pointer direct_declarator
-    | direct_declarator
+    | direct_declarator {
+        $$ = $1;
+    }
     ;
 
 direct_declarator
-    : IDENTIFIER
+    : IDENTIFIER {
+        printf("id [%s]\n", yytext);
+        $$ = std::shared_ptr<ASTNode>(new ASTNode);
+        $$->value = yytext;
+    }
     | '(' declarator ')'
     | direct_declarator '[' ']'
     | direct_declarator '[' '*' ']'
@@ -428,7 +503,10 @@ direct_abstract_declarator
 initializer
     : '{' initializer_list '}'
     | '{' initializer_list ',' '}'
-    | assignment_expression
+    | assignment_expression {
+        $$ = $1;
+        printf("initializer [%s]\n", $$->value.c_str());
+    }
     ;
 
 initializer_list
@@ -515,13 +593,22 @@ jump_statement
     ;
 
 translation_unit
-    : external_declaration
-    | translation_unit external_declaration
+    : external_declaration {
+        ast = std::shared_ptr<ASTNode>(new ASTNode());
+        ast->children.push_back($1);
+        ast->value = "translation_unit";
+    }
+    | translation_unit external_declaration {
+        ast = $1;
+        ast->children.push_back($2);
+    }
     ;
 
 external_declaration
     : function_definition
-    | declaration
+    | declaration {
+        $$ = $1;
+    }
     ;
 
 function_definition

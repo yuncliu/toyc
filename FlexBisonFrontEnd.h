@@ -6,7 +6,7 @@ class FlexBisonFrontEnd: public FrontEnd {
 public:
     FlexBisonFrontEnd();
     ~FlexBisonFrontEnd();
-    virtual std::shared_ptr<Stmt> parse(std::string fileName);
+    virtual std::shared_ptr<ASTNode> parse(std::string fileName);
 };
 
 #endif // ifndef _FLEXBISONFRONTEND_H_

@@ -1,9 +1,8 @@
 #ifndef FRONTEND_H_
 #define FRONTEND_H_
 
-#include "Stmt.h"
-
 #include <memory>
+#include "ASTNode.h"
 
 class FrontEnd {
 public:
@@ -11,7 +10,7 @@ public:
     }
     virtual ~FrontEnd(){
     }
-    virtual std::shared_ptr<Stmt> parse(std::string fileName) = 0;
+    virtual std::shared_ptr<ASTNode> parse(std::string fileName) = 0;
 };
 
 #endif // FRONTEND_H_

@@ -1,8 +1,8 @@
 #include "DumpVisitor.h"
-#include "Expr.h"
-#include "Stmt.h"
+#include "ASTNode.h"
 
 DumpVisitor::DumpVisitor():is_last(false) {
+    /*
     functions.insert(std::pair<std::string, VISIT_FUNC>("CompoundStmt", &DumpVisitor::VisitCompoundStmt));
     functions.insert(std::pair<std::string, VISIT_FUNC>("Func", &DumpVisitor::VisitFunc));
     functions.insert(std::pair<std::string, VISIT_FUNC>("FuncProtoType", &DumpVisitor::VisitFuncProtoType));
@@ -16,6 +16,7 @@ DumpVisitor::DumpVisitor():is_last(false) {
     functions.insert(std::pair<std::string, VISIT_FUNC>("FuncCallExpr", &DumpVisitor::VisitFuncCallExpr));
     functions.insert(std::pair<std::string, VISIT_FUNC>("IfStmt", &DumpVisitor::VisitIfStmt));
     functions.insert(std::pair<std::string, VISIT_FUNC>("AssignStmt", &DumpVisitor::VisitAssignStmt));
+    */
 }
 
 DumpVisitor::~DumpVisitor() {
@@ -29,19 +30,30 @@ VISIT_FUNC DumpVisitor::getFunction(std::string name) {
     return it->second;
 }
 
-bool DumpVisitor::Visit(std::shared_ptr<Stmt> s) {
+bool DumpVisitor::Visit(std::shared_ptr<ASTNode> s) {
     if (!s) {
         return false;
     }
-    std::string a = s->getSelfName();
-    VISIT_FUNC visit_func = this->getFunction(a);
-    if (NULL == visit_func) {
-        printf("No visit function for [%s]\n", s->getSelfName().c_str());
-        return false;
-    }
+    //std::string a = s->getSelfName();
+    //VISIT_FUNC visit_func = this->getFunction(a);
+    //if (NULL == visit_func) {
+    //    printf("No visit function for [%s]\n", s->getSelfName().c_str());
+    //    return false;
+    //}
     print_prefix();
+    printf("%s\n", s->value.c_str());
     is_last = false;
-    return (this->*visit_func)(s);
+    int size = s->children.size();
+    if (size != 0) {
+        this->prefix.push_back("|-");
+    }
+    for (int i = 0; i < size; ++i){
+        if (i == size - 1) {
+            is_last = true;
+        }
+        this->Visit(s->children[i]);
+    }
+    return true;
 }
 /**
  *print out prefix,
@@ -71,7 +83,7 @@ void DumpVisitor::print_prefix() {
     }
     printf(COLOR_RESET);
 }
-
+/*
 bool DumpVisitor::VisitCompoundStmt(std::shared_ptr<Stmt> stmt) {
     //CompoundStmt* p = (CompoundStmt*)stmt;
     std::shared_ptr<CompoundStmt> p = std::static_pointer_cast<CompoundStmt>(stmt);
@@ -227,3 +239,4 @@ bool DumpVisitor::VisitAssignStmt(std::shared_ptr<Stmt> stmt) {
     this->prefix.pop_back();
     return true;
 }
+*/

@@ -1,6 +1,5 @@
 #include "Visitor.h"
-#include "Expr.h"
-#include "Stmt.h"
+#include "ASTNode.h"
 
 Visitor::Visitor() {
 }
@@ -8,6 +7,6 @@ Visitor::Visitor() {
 Visitor::~Visitor() {
 }
 
-bool Visitor::Visit(std::shared_ptr<Stmt> s) {
+bool Visitor::Visit(std::shared_ptr<ASTNode> s) {
     return true;
 }
