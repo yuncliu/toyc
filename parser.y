@@ -251,6 +251,7 @@ declaration
     | declaration_specifiers init_declarator_list ';' {
         printf("declaration [%s] [%s]\n", $1->value.c_str(), $2->value.c_str());
         $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = "declaration";
         $$->type = ASTNode::DECL;
         $$->children.push_back($1);
         $$->children.push_back($2);
