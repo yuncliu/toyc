@@ -3,8 +3,8 @@
 ASTNode::ASTNode() {
 }
 
-ASTNode::ASTNode(NodeType ty)
-    :type(ty) {
+ASTNode::ASTNode(std::string v, NodeType ty)
+    :value(v), type(ty) {
 }
 
 ASTNode::~ASTNode() {
@@ -19,12 +19,13 @@ std::string ASTNode::info() {
  * @class VarDecl
  */
 VarDecl::VarDecl()
-    :ASTNode(ASTNode::VarDecl) {
+    :ASTNode("VarDecl", ASTNode::VarDecl) {
 }
 VarDecl::~VarDecl() {
 }
-/*
+
 std::string VarDecl::info() {
+    return this->value + " " +this->type_specifier;
 }
-*/
+
 #endif

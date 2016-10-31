@@ -18,3 +18,6 @@ std::shared_ptr<ASTNode> FlexBisonFrontEnd::parse(std::string fileName) {
 //    std::shared_ptr<ASTNode> p;
     return ast;
 }
+
+std::shared_ptr<ASTNode> FlexBisonFrontEnd::ast_beautify(std::shared_ptr<ASTNode> ast) {
+}

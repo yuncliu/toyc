@@ -5,7 +5,6 @@
 #include "FlexBisonFrontEnd.h"
 void yyerror(const char *s);
 extern char* yytext;
-extern std::shared_ptr<ASTNode> ast;
 #define YYSTYPE std::shared_ptr<ASTNode>
 %}
 %token    IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
@@ -262,6 +261,11 @@ declaration
     : declaration_specifiers ';'
     | declaration_specifiers init_declarator_list ';' {
         //printf("declaration [%s] [%s]\n", $1->value.c_str(), $2->value.c_str());
+        //$$ = std::shared_ptr<ASTNode>(new ASTNode());
+        //std::shared_ptr<VarDecl> varDecl(new VarDecl());
+        //varDecl->type_specifier = $1->value;
+        //varDecl->children.push_back($2);
+        //$$ = std::dynamic_pointer_cast<ASTNode>(varDecl);
         $$ = std::shared_ptr<ASTNode>(new ASTNode());
         $$->value = "VarDecl";
         $$->type = ASTNode::VarDecl;

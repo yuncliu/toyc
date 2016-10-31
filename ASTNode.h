@@ -25,7 +25,7 @@ public:
         TranslationUnitDecl
     }NodeType;
     ASTNode();
-    ASTNode(NodeType ty);
+    ASTNode(std::string v, NodeType ty);
     virtual ~ASTNode();
 
     /**
@@ -46,6 +46,7 @@ class VarDecl: public ASTNode {
     public:
         VarDecl();
         virtual ~VarDecl();
+        virtual std::string info();
         std::string identifier;
         std::string type_specifier;
 };
