@@ -4,10 +4,15 @@
 #include <vector>
 #include <memory>
 
+#ifdef __APPLE__
+#include <istream>
+#endif
+
 
 class ASTNode {
 public:
     typedef enum {
+        INIT_DECLARATOR,
         DECL,
         STMT,
         EXPR,

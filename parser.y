@@ -1,6 +1,9 @@
 %{
 #include "lex.h"
 #include <memory>
+#ifdef __APPLE__
+#include <istream>
+#endif
 //#include "ASTNode.h"
 #include "FlexBisonFrontEnd.h"
 void yyerror(const char *s);
@@ -34,8 +37,10 @@ primary_expression
         $$->type = ASTNode::IDENTIFIER;
     }
     | constant {
-        $$ = $1;
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        //$$ = $1;
         $$->type = ASTNode::CONSTANT;
+        $$->children.push_back($1);
         ////printf("primary [%s]\n", $1->value.c_str());
     }
     | string

@@ -12,3 +12,4 @@ googletest
 *.ll
 core
 *.s
+*.dSYM
