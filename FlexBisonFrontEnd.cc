@@ -2,7 +2,8 @@
 #include "parser.h"
 #include "lex.h"
 //extern std::shared_ptr<Stmt> root;
-std::shared_ptr<ASTNode> ast(NULL);
+//std::shared_ptr<ASTNode> ast(NULL);
+std::shared_ptr<ASTNode> FlexBisonFrontEnd::ast = std::shared_ptr<ASTNode>(new ASTNode());
 
 FlexBisonFrontEnd::FlexBisonFrontEnd() {
 }

@@ -1,7 +1,8 @@
 %{
 #include "lex.h"
 #include <memory>
-#include "ASTNode.h"
+//#include "ASTNode.h"
+#include "FlexBisonFrontEnd.h"
 void yyerror(const char *s);
 extern char* yytext;
 extern std::shared_ptr<ASTNode> ast;
@@ -28,10 +29,15 @@ extern std::shared_ptr<ASTNode> ast;
 %%
 
 primary_expression
-    : IDENTIFIER
+    : IDENTIFIER {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = yytext;
+        $$->type = ASTNode::IDENTIFIER;
+    }
     | constant {
         $$ = $1;
-        printf("primary [%s]\n", $1->value.c_str());
+        $$->type = ASTNode::CONSTANT;
+        ////printf("primary [%s]\n", $1->value.c_str());
     }
     | string
     | '(' expression ')'
@@ -43,9 +49,15 @@ constant
         /* includes character_constant */
         $$ = std::shared_ptr<ASTNode>(new ASTNode());
         $$->value = yytext;
-        printf("constant [%s]\n", $$->value.c_str());
+        //$$->type = ASTNode::CONSTANT;
+        $$->type = ASTNode::IntegerLiteral;
+        ////printf("constant [%s]\n", $$->value.c_str());
     }
-    | F_CONSTANT
+    | F_CONSTANT {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = yytext;
+        $$->type = ASTNode::FloatingLiteral;
+    }
     | ENUMERATION_CONSTANT    /* after it has been defined as such */
     ;
 
@@ -75,7 +87,7 @@ generic_association
 postfix_expression
     : primary_expression {
         $$ = $1;
-        printf("postfix_expression from primary_expression[%s]\n", $$->value.c_str());
+        //printf("postfix_expression from primary_expression[%s]\n", $$->value.c_str());
     }
     | postfix_expression '[' expression ']'
     | postfix_expression '(' ')'
@@ -96,7 +108,7 @@ argument_expression_list
 unary_expression
     : postfix_expression {
         $$ = $1;
-        printf("unary_expression from postfix_expression [%s]\n", $$->value.c_str());
+        //printf("unary_expression from postfix_expression [%s]\n", $$->value.c_str());
     }
     | INC_OP unary_expression
     | DEC_OP unary_expression
@@ -118,7 +130,7 @@ unary_operator
 cast_expression
     : unary_expression {
         $$ = $1;
-        printf("cast from unary_expression[%s]\n", $$->value.c_str());
+        //printf("cast from unary_expression[%s]\n", $$->value.c_str());
     }
     | '(' type_name ')' cast_expression
     ;
@@ -126,7 +138,7 @@ cast_expression
 multiplicative_expression
     : cast_expression {
         $$ = $1;
-        printf("multiplicative_expression from cast_expression[%s]\n", $$->value.c_str());
+        //printf("multiplicative_expression from cast_expression[%s]\n", $$->value.c_str());
     }
     | multiplicative_expression '*' cast_expression
     | multiplicative_expression '/' cast_expression
@@ -144,7 +156,7 @@ additive_expression
 shift_expression
     : additive_expression {
         $$ = $1;
-        printf("shift_expression [%s]\n", $$->value.c_str());
+        //printf("shift_expression [%s]\n", $$->value.c_str());
     }
     | shift_expression LEFT_OP additive_expression
     | shift_expression RIGHT_OP additive_expression
@@ -178,7 +190,7 @@ and_expression
 exclusive_or_expression
     : and_expression {
         $$ = $1;
-        printf("and_expression [%s]\n", $$->value.c_str());
+        //printf("and_expression [%s]\n", $$->value.c_str());
     }
     | exclusive_or_expression '^' and_expression
     ;
@@ -200,7 +212,7 @@ logical_and_expression
 logical_or_expression
     : logical_and_expression {
         $$ = $1;
-        printf("logical_or_expression [%s]\n", $$->value.c_str());
+        //printf("logical_or_expression [%s]\n", $$->value.c_str());
     }
     | logical_or_expression OR_OP logical_and_expression
     ;
@@ -215,7 +227,7 @@ conditional_expression
 assignment_expression
     : conditional_expression {
         $$ = $1;
-        printf("assignment_expression [%s]\n", $$->value.c_str());
+        //printf("assignment_expression [%s]\n", $$->value.c_str());
     }
     | unary_expression assignment_operator assignment_expression
     ;
@@ -237,7 +249,7 @@ assignment_operator
 expression
     : assignment_expression {
         $$ = $1;
-        printf("expression [%s]\n", $$->value.c_str());
+        //printf("expression [%s]\n", $$->value.c_str());
     }
     | expression ',' assignment_expression
     ;
@@ -249,10 +261,10 @@ constant_expression
 declaration
     : declaration_specifiers ';'
     | declaration_specifiers init_declarator_list ';' {
-        printf("declaration [%s] [%s]\n", $1->value.c_str(), $2->value.c_str());
+        //printf("declaration [%s] [%s]\n", $1->value.c_str(), $2->value.c_str());
         $$ = std::shared_ptr<ASTNode>(new ASTNode());
-        $$->value = "declaration";
-        $$->type = ASTNode::DECL;
+        $$->value = "VarDecl";
+        $$->type = ASTNode::VarDecl;
         $$->children.push_back($1);
         $$->children.push_back($2);
     }
@@ -283,7 +295,7 @@ init_declarator_list
 
 init_declarator
     : declarator '=' initializer {
-        printf("init_declarator [%s]= [%s]\n", $1->value.c_str(), $3->value.c_str());
+        //printf("init_declarator [%s]= [%s]\n", $1->value.c_str(), $3->value.c_str());
         $$ = std::shared_ptr<ASTNode>(new ASTNode);
         $$->value = "init_declarator";
         $$->children.push_back($1);
@@ -313,7 +325,11 @@ type_specifier
     }
     | LONG
     | FLOAT
-    | DOUBLE
+    | DOUBLE {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = yytext;
+        $$->type = ASTNode::TYPE_SPECIFIER;
+    }
     | SIGNED
     | UNSIGNED
     | BOOL
@@ -413,9 +429,10 @@ declarator
 
 direct_declarator
     : IDENTIFIER {
-        printf("id [%s]\n", yytext);
+        //printf("id [%s]\n", yytext);
         $$ = std::shared_ptr<ASTNode>(new ASTNode);
         $$->value = yytext;
+        $$->type = ASTNode::IDENTIFIER;
     }
     | '(' declarator ')'
     | direct_declarator '[' ']'
@@ -427,8 +444,17 @@ direct_declarator
     | direct_declarator '[' type_qualifier_list assignment_expression ']'
     | direct_declarator '[' type_qualifier_list ']'
     | direct_declarator '[' assignment_expression ']'
-    | direct_declarator '(' parameter_type_list ')'
-    | direct_declarator '(' ')'
+    | direct_declarator '(' parameter_type_list ')' {
+        $$ = $1;
+        $$->type = ASTNode::IDENTIFIER;
+        $$->children.push_back($3);
+    }
+    | direct_declarator '(' ')' {
+        //printf("id [%s]\n", yytext);
+        $$ = $1;
+        //$$->value = yytext;
+        $$->type = ASTNode::IDENTIFIER;
+    }
     | direct_declarator '(' identifier_list ')'
     ;
 
@@ -447,16 +473,30 @@ type_qualifier_list
 
 parameter_type_list
     : parameter_list ',' ELLIPSIS
-    | parameter_list
+    | parameter_list {
+        $$ = $1;
+    }
     ;
 
 parameter_list
-    : parameter_declaration
-    | parameter_list ',' parameter_declaration
+    : parameter_declaration {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->children.push_back($1);
+        $$->value = "parameter_list";
+    }
+    | parameter_list ',' parameter_declaration {
+        $$ = $1;
+        $$->children.push_back($3);
+    }
     ;
 
 parameter_declaration
-    : declaration_specifiers declarator
+    : declaration_specifiers declarator {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = "parameter_declaration";
+        $$->children.push_back($1);
+        $$->children.push_back($2);
+    }
     | declaration_specifiers abstract_declarator
     | declaration_specifiers
     ;
@@ -506,7 +546,7 @@ initializer
     | '{' initializer_list ',' '}'
     | assignment_expression {
         $$ = $1;
-        printf("initializer [%s]\n", $$->value.c_str());
+        //printf("initializer [%s]\n", $$->value.c_str());
     }
     ;
 
@@ -541,7 +581,9 @@ statement
     | expression_statement
     | selection_statement
     | iteration_statement
-    | jump_statement
+    | jump_statement {
+        $$ = $1;
+    }
     ;
 
 labeled_statement
@@ -551,18 +593,38 @@ labeled_statement
     ;
 
 compound_statement
-    : '{' '}'
-    | '{'  block_item_list '}'
+    : '{' '}' {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = "compound_statement";
+    }
+    | '{'  block_item_list '}' {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = "compound_statement";
+        $$->children.swap($2->children);
+        //$$->children.insert($$->children.end(), $2->children.begin(), $2->children.end());
+        //$$->children.push_back($2);
+    }
     ;
 
 block_item_list
-    : block_item
-    | block_item_list block_item
+    : block_item {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = "block_item_list";
+        $$->children.push_back($1);
+    }
+    | block_item_list block_item {
+        $$ = $1;
+        $$->children.push_back($2);
+    }
     ;
 
 block_item
-    : declaration
-    | statement
+    : declaration {
+        $$ = $1;
+    }
+    | statement {
+        $$ = $1;
+    }
     ;
 
 expression_statement
@@ -589,32 +651,53 @@ jump_statement
     : GOTO IDENTIFIER ';'
     | CONTINUE ';'
     | BREAK ';'
-    | RETURN ';'
-    | RETURN expression ';'
+    | RETURN ';' {
+        $$ = $1;
+    }
+    | RETURN expression ';' {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->value = "return statement";
+        $$->type = ASTNode::STATEMENT;
+        $$->children.push_back($2);
+    }
     ;
 
 translation_unit
     : external_declaration {
-        ast = std::shared_ptr<ASTNode>(new ASTNode());
-        ast->children.push_back($1);
-        ast->value = "translation_unit";
+        $$ = FlexBisonFrontEnd::ast;
+        //FlexBisonFrontEnd::ast = std::shared_ptr<ASTNode>(new ASTNode());
+        $$->children.push_back($1);
+        $$->value = "TranslationUnitDecl";
+        $$->type = ASTNode::TranslationUnitDecl;
     }
     | translation_unit external_declaration {
-        ast = $1;
-        ast->children.push_back($2);
+        $$ = $1;
+        $$->children.push_back($2);
     }
     ;
 
 external_declaration
-    : function_definition
+    : function_definition {
+        $$ = $1;
+    }
     | declaration {
         $$ = $1;
     }
     ;
 
 function_definition
-    : declaration_specifiers declarator declaration_list compound_statement
-    | declaration_specifiers declarator compound_statement
+    : declaration_specifiers declarator declaration_list compound_statement {
+        printf("function1\n");
+    }
+    | declaration_specifiers declarator compound_statement {
+        $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        //$$->value = "function";
+        $$->value = "FunctionDecl";
+        $$->type = ASTNode::FunctionDecl;
+        $$->children.push_back($1);
+        $$->children.push_back($2);
+        $$->children.push_back($3);
+    }
     ;
 
 declaration_list

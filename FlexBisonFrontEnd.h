@@ -7,6 +7,7 @@ public:
     FlexBisonFrontEnd();
     ~FlexBisonFrontEnd();
     virtual std::shared_ptr<ASTNode> parse(std::string fileName);
+    static std::shared_ptr<ASTNode> ast;
 };
 
 #endif // ifndef _FLEXBISONFRONTEND_H_

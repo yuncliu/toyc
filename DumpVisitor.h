@@ -8,34 +8,16 @@
 #define COLOR_RESET "\033[0m"
 class DumpVisitor;
 class ASTNode;
-typedef bool (DumpVisitor::*VISIT_FUNC)(std::shared_ptr<ASTNode> s);
 
 class DumpVisitor:public Visitor {
     protected:
-        std::map<std::string, VISIT_FUNC> functions;
         std::vector<std::string> prefix;
         bool is_last;
     public:
         DumpVisitor();
         virtual ~DumpVisitor();
-        VISIT_FUNC getFunction(std::string name);
         virtual bool Visit(std::shared_ptr<ASTNode> s);
         void print_prefix();
-        /*
-        bool VisitCompoundStmt(std::shared_ptr<Stmt> stmt);
-        bool VisitFunc(std::shared_ptr<Stmt> stmt);
-        bool VisitFuncProtoType(std::shared_ptr<Stmt> stmt);
-        bool VisitIdExpr(std::shared_ptr<Stmt> stmt);
-        bool VisitTypeExpr(std::shared_ptr<Stmt> stmt);
-        bool VisitFuncParameter(std::shared_ptr<Stmt> stmt);
-        bool VisitVarExpr(std::shared_ptr<Stmt> stmt);
-        bool VisitBinaryExpr(std::shared_ptr<Stmt> stmt);
-        bool VisitReturnStmt(std::shared_ptr<Stmt> stmt);
-        bool VisitIntExpr(std::shared_ptr<Stmt> stmt);
-        bool VisitFuncCallExpr(std::shared_ptr<Stmt> stmt);
-        bool VisitIfStmt(std::shared_ptr<Stmt> stmt);
-        bool VisitAssignStmt(std::shared_ptr<Stmt> stmt);
-        */
 };
 
 #endif // _VISITOR_H_

@@ -14,13 +14,41 @@ public:
         OP,
         INTEGER,
         DOUBLE,
-        TYPE_SPECIFIER
+        TYPE_SPECIFIER,
+        IDENTIFIER,
+        CONSTANT,
+        STATEMENT,
+        IntegerLiteral,
+        FloatingLiteral,
+        FunctionDecl,
+        VarDecl,
+        TranslationUnitDecl
     }NodeType;
     ASTNode();
-    ~ASTNode();
+    ASTNode(NodeType ty);
+    virtual ~ASTNode();
+
+    /**
+     * @brief get basic information of this node;
+     */
+    virtual std::string info();
     std::vector<std::shared_ptr<ASTNode> > children;
     std::string value;
     NodeType type;
 };
+
+#if 1
+/**
+ * @class VarDecl
+ * @brief Declaraton of a variable
+ */
+class VarDecl: public ASTNode {
+    public:
+        VarDecl();
+        virtual ~VarDecl();
+        std::string identifier;
+        std::string type_specifier;
+};
+#endif
 
 #endif /* ifndef ASTNODE_H_ */

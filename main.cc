@@ -14,7 +14,7 @@ int main(int argc, char const* argv[]) {
 
     std::string inputFile(argv[1]);
     std::string inputFileNoExt = inputFile.substr(0, inputFile.find("."));
-    std::cout << inputFileNoExt << std::endl;
+    std::cout << "compiling: " << inputFile << std::endl;
 
     FlexBisonFrontEnd frontend;
     std::shared_ptr<ASTNode> ast = frontend.parse(inputFile);
