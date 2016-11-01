@@ -1,6 +1,7 @@
 %{
 #include "lex.h"
 #include <memory>
+#include <algorithm>
 #ifdef __APPLE__
 #include <istream>
 #endif
@@ -300,10 +301,32 @@ constant_expression
 declaration
     : declaration_specifiers ';'
     | declaration_specifiers init_declarator_list ';' {
-        $$ = std::shared_ptr<ASTNode>(new ASTNode());
-        $$->type = ASTNode::VarDecl;
-        $$->children.push_back($1);
-        $$->children.push_back($2);
+        //printf("Vardecl [%s]\n", $1->value.c_str());
+        //$$ = std::shared_ptr<ASTNode>(new ASTNode());
+        std::shared_ptr<VarDecl> p(new VarDecl());
+        if ($1->type == ASTNode::TYPE_SPECIFIER) {
+            p->type_specifier = $1->value;
+        }
+        /*
+        get key element out form init_declarator
+        identifier and value
+        eg:
+        int a = 1;
+        VarDecl                  ValDecl id[a]
+        `-init_declarator   =>   `-IntegerLiteral [1]
+          |-identifer a
+          `-IntegerLiteral [1]
+        */
+        if ($2->type == ASTNode::INIT_DECLARATOR) {
+            for (auto it = $2->children.begin(); it != $2->children.end(); ++it) {
+                if ((*it)->type == ASTNode::IDENTIFIER) {
+                    p->identifier = (*it)->value;
+                } else {
+                    p->children.push_back(*it);
+                }
+            }
+        }
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
     }
     | static_assert_declaration
     ;
@@ -327,7 +350,13 @@ init_declarator_list
     : init_declarator {
         $$ = $1;
     }
-    | init_declarator_list ',' init_declarator
+    | init_declarator_list ',' init_declarator {
+        /* currently not support this syntax:
+            int a, b, c;
+        */
+        //$$ = $1;
+        //$$->children.push_back($3);
+    }
     ;
 
 init_declarator

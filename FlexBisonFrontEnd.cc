@@ -17,7 +17,7 @@ std::shared_ptr<ASTNode> FlexBisonFrontEnd::parse(std::string fileName) {
     yyin = fopen(fileName.c_str(), "r");
     yyparse();
     fclose(yyin);
-    ast_beautify(ast);
+    //ast_beautify(ast);
     return ast;
 }
 
