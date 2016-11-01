@@ -124,3 +124,31 @@ std::string Identifier::info() {
 
 void Identifier::initialize(ASTNode* _node) {
 }
+
+
+FunctionDecl:: FunctionDecl()
+    :ASTNode("FunctionDecl", ASTNode::FunctionDecl) {
+}
+
+FunctionDecl:: ~FunctionDecl() {
+}
+
+std::string FunctionDecl::info() {
+    std::stringstream ssm;
+    ssm << "FunctionDecl [" << this->identifier << "] " << this->return_ty;
+    return ssm.str();//"IntegerLiteral" + "[" + this->value  + "]";
+}
+
+
+ParmVarDecl:: ParmVarDecl()
+    :ASTNode("ParmVarDecl", ASTNode::ParmVarDecl) {
+}
+
+ParmVarDecl:: ~ParmVarDecl() {
+}
+
+std::string ParmVarDecl::info() {
+    std::stringstream ssm;
+    ssm << "ParmVarDecl [" << this->identifier << "] '" << this->ty <<"'";
+    return ssm.str();//"IntegerLiteral" + "[" + this->value  + "]";
+}

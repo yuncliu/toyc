@@ -27,8 +27,9 @@ public:
         FloatingLiteral = 13,
         FunctionDecl    = 14,
         VarDecl         = 15,
-        BinaryOperator  = 16,
-        TranslationUnitDecl = 17
+        ParmVarDecl     = 16,
+        BinaryOperator  = 17,
+        TranslationUnitDecl = 18
     }NodeType;
     ASTNode();
     ASTNode(std::string v, NodeType ty);
@@ -125,6 +126,24 @@ class Identifier: public ASTNode {
         ~Identifier();
         virtual std::string info();
         virtual void initialize(ASTNode* _node);
+};
+
+class FunctionDecl: public ASTNode {
+    public:
+        FunctionDecl();
+        ~FunctionDecl();
+        virtual std::string info();
+        std::string return_ty;
+        std::string identifier;
+};
+
+class ParmVarDecl: public ASTNode {
+    public:
+        ParmVarDecl();
+        ~ParmVarDecl();
+        virtual std::string info();
+        std::string ty;
+        std::string identifier;
 };
 
 #endif /* ifndef ASTNODE_H_ */

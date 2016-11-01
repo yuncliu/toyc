@@ -511,15 +511,25 @@ direct_declarator
     | direct_declarator '[' type_qualifier_list ']'
     | direct_declarator '[' assignment_expression ']'
     | direct_declarator '(' parameter_type_list ')' {
-        $$ = $1;
-        $$->type = ASTNode::IDENTIFIER;
-        $$->children.push_back($3);
+        /*
+            aa(int a, int b)
+            here is the declaraton of function
+        */
+        std::shared_ptr<FunctionDecl> p(new FunctionDecl());
+        p->identifier = $1->value;
+        for (auto it = $3->children.begin(); it != $3->children.end(); ++it) {
+            // push all paramvar in parameter_type_list into FunctionDecl
+            p->children.push_back(*it);
+        }
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
     }
     | direct_declarator '(' ')' {
-        //printf("id [%s]\n", yytext);
-        $$ = $1;
-        //$$->value = yytext;
-        $$->type = ASTNode::IDENTIFIER;
+        /*
+            function declaration with out parameter
+        */
+        std::shared_ptr<FunctionDecl> p(new FunctionDecl());
+        p->identifier = $1->value;
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
     }
     | direct_declarator '(' identifier_list ')'
     ;
@@ -547,8 +557,10 @@ parameter_type_list
 parameter_list
     : parameter_declaration {
         $$ = std::shared_ptr<ASTNode>(new ASTNode());
+        //std::shared_ptr<ParmVarDecl> p(new ParmVarDecl());
         $$->children.push_back($1);
         $$->value = "parameter_list";
+        //$$ = std::dynamic_pointer_cast<ASTNode>(p);
     }
     | parameter_list ',' parameter_declaration {
         $$ = $1;
@@ -558,10 +570,10 @@ parameter_list
 
 parameter_declaration
     : declaration_specifiers declarator {
-        $$ = std::shared_ptr<ASTNode>(new ASTNode());
-        $$->value = "parameter_declaration";
-        $$->children.push_back($1);
-        $$->children.push_back($2);
+        std::shared_ptr<ParmVarDecl> p(new ParmVarDecl());
+        p->ty = $1->value;
+        p->identifier = $2->value;
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
     }
     | declaration_specifiers abstract_declarator
     | declaration_specifiers
@@ -731,7 +743,6 @@ jump_statement
 translation_unit
     : external_declaration {
         $$ = FlexBisonFrontEnd::ast;
-        //FlexBisonFrontEnd::ast = std::shared_ptr<ASTNode>(new ASTNode());
         $$->children.push_back($1);
         $$->value = "TranslationUnitDecl";
         $$->type = ASTNode::TranslationUnitDecl;
@@ -756,13 +767,12 @@ function_definition
         printf("function1\n");
     }
     | declaration_specifiers declarator compound_statement {
-        $$ = std::shared_ptr<ASTNode>(new ASTNode());
-        //$$->value = "function";
-        $$->value = "FunctionDecl";
-        $$->type = ASTNode::FunctionDecl;
-        $$->children.push_back($1);
-        $$->children.push_back($2);
-        $$->children.push_back($3);
+        $$ = $2;
+        std::shared_ptr<FunctionDecl> p = std::static_pointer_cast<FunctionDecl>($$);
+        if ($1->type == ASTNode::TYPE_SPECIFIER) {
+            p->return_ty = $1->value;
+        }
+        p->children.push_back($3);
     }
     ;
 
