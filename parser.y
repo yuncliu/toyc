@@ -32,16 +32,16 @@ extern char* yytext;
 
 primary_expression
     : IDENTIFIER {
-        $$ = std::shared_ptr<ASTNode>(new ASTNode());
-        $$->value = yytext;
-        $$->type = ASTNode::IDENTIFIER;
+        //$$ = std::shared_ptr<ASTNode>(new ASTNode());
+        //$$->value = yytext;
+        //$$->type = ASTNode::IDENTIFIER;
+        std::shared_ptr<Identifier> p(new Identifier);
+        p->value = yytext;
+        $$ = p;
     }
     | constant {
-        $$ = std::shared_ptr<ASTNode>(new ASTNode());
-        //$$ = $1;
-        $$->type = ASTNode::CONSTANT;
-        $$->children.push_back($1);
-        ////printf("primary [%s]\n", $1->value.c_str());
+        /* make directly be the Integer or Double Literal */
+        $$ = $1;
     }
     | string
     | '(' expression ')'
@@ -51,16 +51,21 @@ primary_expression
 constant
     : I_CONSTANT {
         /* includes character_constant */
+        /*
         $$ = std::shared_ptr<ASTNode>(new ASTNode());
         $$->value = yytext;
         //$$->type = ASTNode::CONSTANT;
         $$->type = ASTNode::IntegerLiteral;
-        ////printf("constant [%s]\n", $$->value.c_str());
+        printf("IntegerLiteral [%s]\n", $$->value.c_str());
+        */
+        std::shared_ptr<IntegerLiteral> p(new IntegerLiteral());
+        p->value = yytext;
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
     }
     | F_CONSTANT {
-        $$ = std::shared_ptr<ASTNode>(new ASTNode());
-        $$->value = yytext;
-        $$->type = ASTNode::FloatingLiteral;
+        std::shared_ptr<FloatingLiteral> p(new FloatingLiteral());
+        p->value = yytext;
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
     }
     | ENUMERATION_CONSTANT    /* after it has been defined as such */
     ;
@@ -144,17 +149,47 @@ multiplicative_expression
         $$ = $1;
         //printf("multiplicative_expression from cast_expression[%s]\n", $$->value.c_str());
     }
-    | multiplicative_expression '*' cast_expression
-    | multiplicative_expression '/' cast_expression
-    | multiplicative_expression '%' cast_expression
+    | multiplicative_expression '*' cast_expression {
+        std::shared_ptr<BinaryOperator> p(new BinaryOperator);
+        p->op = "*";
+        p->children.push_back($1);
+        p->children.push_back($3);
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
+    }
+    | multiplicative_expression '/' cast_expression {
+        std::shared_ptr<BinaryOperator> p(new BinaryOperator);
+        p->op = "/";
+        p->children.push_back($1);
+        p->children.push_back($3);
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
+    }
+    | multiplicative_expression '%' cast_expression {
+        std::shared_ptr<BinaryOperator> p(new BinaryOperator);
+        p->op = "%";
+        p->children.push_back($1);
+        p->children.push_back($3);
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
+    }
     ;
 
 additive_expression
     : multiplicative_expression {
         $$ = $1;
     }
-    | additive_expression '+' multiplicative_expression
-    | additive_expression '-' multiplicative_expression
+    | additive_expression '+' multiplicative_expression {
+        std::shared_ptr<BinaryOperator> p(new BinaryOperator);
+        p->op = "+";
+        p->children.push_back($1);
+        p->children.push_back($3);
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
+    }
+    | additive_expression '-' multiplicative_expression {
+        std::shared_ptr<BinaryOperator> p(new BinaryOperator);
+        p->op = "-";
+        p->children.push_back($1);
+        p->children.push_back($3);
+        $$ = std::dynamic_pointer_cast<ASTNode>(p);
+    }
     ;
 
 shift_expression
@@ -265,14 +300,7 @@ constant_expression
 declaration
     : declaration_specifiers ';'
     | declaration_specifiers init_declarator_list ';' {
-        //printf("declaration [%s] [%s]\n", $1->value.c_str(), $2->value.c_str());
-        //$$ = std::shared_ptr<ASTNode>(new ASTNode());
-        //std::shared_ptr<VarDecl> varDecl(new VarDecl());
-        //varDecl->type_specifier = $1->value;
-        //varDecl->children.push_back($2);
-        //$$ = std::dynamic_pointer_cast<ASTNode>(varDecl);
         $$ = std::shared_ptr<ASTNode>(new ASTNode());
-        $$->value = "VarDecl";
         $$->type = ASTNode::VarDecl;
         $$->children.push_back($1);
         $$->children.push_back($2);
@@ -309,7 +337,7 @@ init_declarator
         $$->value = "init_declarator";
         $$->children.push_back($1);
         $$->children.push_back($3);
-        $$->type = ASTNode::EXPR;
+        $$->type = ASTNode::INIT_DECLARATOR;
     }
     | declarator
     ;
